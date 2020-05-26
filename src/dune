@@ -1,0 +1,13 @@
+(executable
+ (name main)
+ (preprocess
+  (pps
+    ppx_deriving.show))
+ (libraries core))
+
+(rule
+  (targets parser.ml)
+    (deps parser.mly)
+    (action (run menhir parser.mly)))
+
+(ocamllex lexer)

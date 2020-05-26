@@ -1,0 +1,4 @@
+Tasks:
+  ☐ Allow typecheck error messages to be passed through.
+  ☐ Write some initial tests for basic C files.
+  ☐ Read the LLVM language tutorial.

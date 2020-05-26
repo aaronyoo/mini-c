@@ -25,7 +25,7 @@ program:
 
 fdecl:
   t = TYP; i = IDENT; LPAREN; RPAREN; LBRACE; sl = list(stmt); RBRACE;
-  { {ret_typ = t; name = i; body = sl}: Ast.func_decl }
+  { {ret_typ = t; name = i; body = sl}: Ast.func }
 
 stmt:
   RETURN; e = expr; SEMICOLON;  { Return e }

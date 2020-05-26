@@ -17,7 +17,8 @@ let parse filename =
   let inx = In_channel.create filename in
   let lexbuf = Lexing.from_channel inx in
   let program = parse_with_error lexbuf in
-  ignore(Printf.printf "%s\n" (Ast.show_program program))
+  let typed_prog = Typecheck.check_program program in
+  ignore(Printf.printf "%s\n" (Tast.show_tprog typed_prog))
 
 let command =
   Command.basic

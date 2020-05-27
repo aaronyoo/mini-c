@@ -8,8 +8,8 @@ let print_position outx lexbuf =
     (Lexing.lexeme lexbuf)
 
 let parse_with_error lexbuf =
-  try Parser.program Lexer.read lexbuf with
-  | Parser.Error ->
+  try Minicc.Parser.program Minicc.Lexer.read lexbuf with
+  | Minicc.Parser.Error ->
     fprintf stderr "%a: syntax error\n" print_position lexbuf;
     exit (-1)
 
@@ -17,8 +17,11 @@ let parse filename =
   let inx = In_channel.create filename in
   let lexbuf = Lexing.from_channel inx in
   let program = parse_with_error lexbuf in
-  let typed_prog = Typecheck.check_program program in
-  ignore(Printf.printf "%s\n" (Tast.show_tprog typed_prog))
+  try let typed_prog = Minicc.Typecheck.check_program program in
+    ignore(Printf.printf "%s\n" (Minicc.Tast.show_tprog typed_prog))
+  with
+  | Minicc.Typecheck.Error e -> fprintf stderr "typecheck error: %s\n" e;
+    exit (-1)
 
 let command =
   Command.basic

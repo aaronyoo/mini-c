@@ -1,4 +1,4 @@
 Tasks:
-  ☐ Allow typecheck error messages to be passed through.
-  ☐ Write some initial tests for basic C files.
+  ✔ Allow typecheck error messages to be passed through. @done(20-05-26 20:37)
+  ✔ Write some initial tests for basic C files. @done(20-05-26 21:57)
   ☐ Read the LLVM language tutorial.

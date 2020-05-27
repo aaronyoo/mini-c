@@ -1,0 +1,6 @@
+(tests
+  (names
+    basic
+  )
+  (libraries alcotest minicc)
+  (action (run %{test} -e)))

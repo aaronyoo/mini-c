@@ -1,9 +1,8 @@
-(executable
- (name main)
+(library
+ (name minicc)
+ (libraries core)
  (preprocess
-  (pps
-    ppx_deriving.show))
- (libraries core))
+  (pps ppx_deriving.show)))
 
 (rule
   (targets parser.ml)

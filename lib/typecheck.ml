@@ -18,12 +18,12 @@ let check_stmt (func: Ast.func) (stmt: Ast.stmt) =
     let t = check_expr e in
     if phys_equal t.typ func.ret_typ
     then Tast.Return t
-    else raise (Error "Return Type Mismatch")
+    else raise (Error "return type mismatch")
 
 let check_func (func: Ast.func) (env: env) =
-  (* Make sure that there are not overlapping function names. *)
+  (* Make sure that there are no overlapping function names. *)
   if Map.mem env.funcs func.name
-  then raise (Error ("Duplicate Function Name: "  ^ func.name))
+  then raise (Error ("duplicate function name -- "  ^ func.name))
   else
     (* Add name to function map *)
     let funcs = Map.set env.funcs ~key: func.name ~data: func in
@@ -40,4 +40,4 @@ let check_program (prog: Ast.program) : Tast.tprog =
   in
   if Map.mem env.funcs "main"
   then ({ func_decls = typed_funcs }: Tast.tprog)
-  else raise (Error "No main Function")
+  else raise (Error "no main function")

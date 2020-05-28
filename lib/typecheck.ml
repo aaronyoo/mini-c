@@ -9,7 +9,7 @@ type env = {
 
 let check_expr (expr: Ast.expr) =
   match expr with
-  | Ast.IntLit i -> ({ typ = Ast.TyInt; expr = Tast.TIntLit i }: Tast.texpr)
+  | Ast.IntLit i -> ({ typ = Ast.TyInt; expr = Tast.TIntLit i }: Tast.aexpr)
 
 let check_stmt (func: Ast.func) (stmt: Ast.stmt) =
   match stmt with
@@ -17,7 +17,7 @@ let check_stmt (func: Ast.func) (stmt: Ast.stmt) =
     (* The returned type must match the functions declared return type. *)
     let t = check_expr e in
     if phys_equal t.typ func.ret_typ
-    then Tast.Return t
+    then Tast.TReturn t
     else raise (Error "return type mismatch")
 
 let check_func (func: Ast.func) (env: env) =

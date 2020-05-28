@@ -17,11 +17,16 @@ let parse filename =
   let inx = In_channel.create filename in
   let lexbuf = Lexing.from_channel inx in
   let program = parse_with_error lexbuf in
-  try let typed_prog = Minicc.Typecheck.check_program program in
-    ignore(Printf.printf "%s\n" (Minicc.Tast.show_tprog typed_prog))
+  try
+    let typed_prog = Minicc.Typecheck.check_program program in
+    Minicc.Codegen.gen_program typed_prog;
+    Llvm.dump_module Minicc.Codegen.the_module;
+    ignore(Llvm_bitwriter.write_bitcode_file Minicc.Codegen.the_module "/tmp/test.bc");
   with
   | Minicc.Typecheck.Error e -> fprintf stderr "typecheck error: %s\n" e;
     exit (-1)
+  | Minicc.Codegen.Error e -> fprintf stderr "codegen error: %s\n" e;
+    exit(-1)
 
 let command =
   Command.basic

@@ -1,13 +1,12 @@
-(* Typed expressions. *)
-type texpr = { typ: Ast.typ; expr: aexpr } [@@deriving show]
+(* Annotated expressions. *)
+type aexpr = { typ: Ast.typ; expr: texpr } [@@deriving show]
 
-(* Annotated expression. Expression with types. *)
-and aexpr =
+and texpr =
   | TIntLit of int
 [@@deriving show]
 
 type tstmt =
-  | Return of texpr
+  | TReturn of aexpr
 [@@deriving show]
 
 (* Functions are the same as the untyped AST except they have typed bodies *)

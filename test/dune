@@ -1,6 +1,5 @@
-(tests
-  (names
+(executable
+  (name
     basic
   )
-  (libraries alcotest minicc)
-  (action (run %{test} -e)))
+  (libraries minicc alcotest llvm))

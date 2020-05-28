@@ -1,5 +1,5 @@
 (executable
  (name main)
- (libraries minicc core)
+ (libraries minicc core llvm llvm.bitwriter)
  (preprocess
   (pps ppx_deriving.show)))

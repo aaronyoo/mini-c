@@ -8,7 +8,16 @@ Iteration 1:
   ✔ Allow bitcode to be output to a file. @done(20-05-27 20:47)
 
 Iteration 2:
-  *Add integer bindings and the ability to initialize and return integers.*
-  ☐ Add variable bindings to AST.
-  ☐ Add the typing of variable bindings to the typechecker.
-  ☐ Add the typing of variable bindings to the typechecker.
+  *Add variable bindings and the ability to initialize and return integers.*
+  ✔ Add local variable bindings to AST. @done(20-05-31 13:26)
+  ✔ Add the typing of local variable bindings to the typechecker. @done(20-05-31 13:26)
+  ✔ Add code generation for local variable bindings. @done(20-05-31 13:26)
+  ✔ Add global variable bindings to AST. @done(20-05-31 14:42)
+  ✔ Add typing of global variables to the typechecker @done(20-05-31 14:42)
+  ✔ Add code generation for global variables. @done(20-05-31 14:43)
+
+Iteration 3:
+  *Add assignment (the ability to assign variables to other values).*
+  ☐ Add assignment statement type to AST.
+  ☐ Add typechecking assignment statements.
+  ☐ Add code generation for assignment statements.

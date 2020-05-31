@@ -28,6 +28,7 @@ rule read =
   | '{'       { LBRACE }
   | '}'       { RBRACE }
   | ';'       { SEMICOLON }
+  | '='       { ASSIGN }
 
   (* Values. *)
   | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }

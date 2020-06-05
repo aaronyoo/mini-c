@@ -21,3 +21,11 @@ Iteration 3:
   ✔ Add assignment statement type to AST. @done(20-06-05 10:42)
   ✔ Add typechecking assignment statements. @done(20-06-05 10:52)
   ✔ Add code generation for assignment statements. @done(20-06-05 10:52)
+
+Iteration 4:
+  *This is a cleanup iteration for creating a testing pipeline.*
+  ✔ Add ppx_expect tests for parser @done(20-06-05 11:42)
+  ✔ Add ppx_expect tests for typechecker @done(20-06-05 11:48)
+  ☐ Add ppx_expect tests for code generator
+    This one is a little bit difficult because I am using global variables
+    right now. I will come back to it later.

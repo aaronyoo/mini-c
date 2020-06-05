@@ -1,8 +1,9 @@
 (library
  (name minicc)
  (libraries core llvm llvm.analysis)
+ (inline_tests)
  (preprocess
-  (pps ppx_deriving.show)))
+  (pps ppx_deriving.show ppx_expect)))
 
 (rule
   (targets parser.ml)

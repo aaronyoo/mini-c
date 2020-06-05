@@ -35,17 +35,18 @@ decls:
 
 fdecl:
   t = TYP; i = IDENT; LPAREN; RPAREN; LBRACE; vl = list(vdecl); sl = list(stmt); RBRACE;
-  { {ret_typ = t; name = i; locals = vl; body = sl}: Ast.func }
+  { {ret_typ = t; name = i; locals = vl; body = sl}: func }
 
 vdecl:
   | t = TYP; i = IDENT; SEMICOLON
-    { { bind_type = t; bind_name = i; initial_value = None }: Ast.bind }
+    { { bind_type = t; bind_name = i; initial_value = None }: bind }
   | t = TYP; i = IDENT; ASSIGN; e = expr; SEMICOLON
-    { { bind_type = t; bind_name = i; initial_value = Some e }: Ast.bind }
+    { { bind_type = t; bind_name = i; initial_value = Some e }: bind }
 
 stmt:
-  RETURN; e = expr; SEMICOLON;  { Return e }
+  | RETURN; e = expr; SEMICOLON;  { Return e }
+  | e1 = expr; ASSIGN; e2 = expr; SEMICOLON  { Assign ({ left = e1; right = e2 }: assign_stmt) }
 
 expr:
   | i = INT  { IntLit i }
-  | id = IDENT  { Ident id }
+  | id = IDENT  { Ident ({ literal = id}: ident_expr) }

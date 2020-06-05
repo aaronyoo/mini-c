@@ -1,5 +1,7 @@
 open Llvm
 open Base
+open Ast
+open Tast
 
 exception Error of string
 
@@ -16,28 +18,46 @@ let the_module = create_module context "minicc"
 let builder = builder context
 let i64_type = i64_type context
 
-let trans_asttyp (typ: Ast.typ): lltype =
+let trans_asttyp (typ: typ): lltype =
   match typ with
-  | Ast.TyInt -> i64_type
+  | TyInt -> i64_type
 
-let gen_expr (expr: Tast.aexpr) (env: env) =
-  match expr.expr with
-  | Tast.TIntLit i -> const_int i64_type i
-  | Tast.TIdent id ->
-    match Map.find env.var_names id with
-    | None -> raise (Error ("identifier used before definition: " ^ id))
+let gen_lval (lval: tlval) (env: env) =
+  (* Returns the result of a load instruction as well as the actual pointer. In
+     cases that do not need to write to the varaible (and thus, do not need the
+     pointer value) it is the callers responsibility to discard it. *)
+  match lval with
+  | TIdent id ->
+    match Map.find env.var_names id.literal with
+    | None -> raise (Error ("identifier used before definition: " ^ id.literal))
     | Some v ->
       (* Load the value of the identifier *)
-      build_load v "" builder
+      (build_load v "" builder), v
 
-let gen_stmt (stmt: Tast.tstmt) (env: env) =
+let gen_expr (expr: aexpr) (env: env) =
+  match expr.expr with
+  | TIntLit i -> const_int i64_type i
+  (* Discard the lval pointer because we are not writing. *)
+  | TLval l -> fst (gen_lval l env)
+
+let gen_assign_stmt (assign_stmt: tassign_stmt) (env: env) =
+  let lval = match assign_stmt.left.expr with
+    | TLval lval -> lval
+    |  _ -> failwith "unreachable"
+  in
+  let _, left_ptr = gen_lval lval env in
+  let right = gen_expr assign_stmt.right env in
+  build_store right left_ptr builder
+
+let gen_stmt (stmt: tstmt) (env: env) =
   match stmt with
-  | Tast.TReturn expr -> build_ret (gen_expr expr env) builder
+  | TReturn expr -> build_ret (gen_expr expr env) builder
+  | TAssign assign_stmt -> gen_assign_stmt assign_stmt env
 
-let gen_func_decl (tfunc: Tast.tfunc) (env: env) =
+let gen_func_decl (tfunc: tfunc) (env: env) =
   (* For now, there are no arguments and only and integer return type. *)
   let ft = match tfunc.ret_typ with
-    | Ast.TyInt -> function_type i64_type (Array.create ~len: 0 i64_type)
+    | TyInt -> function_type i64_type (Array.create ~len: 0 i64_type)
   in
   (* Declare the function in the module. *)
   let the_function = declare_function tfunc.name ft the_module in
@@ -64,7 +84,7 @@ let gen_func_decl (tfunc: Tast.tfunc) (env: env) =
   Llvm_analysis.assert_valid_function the_function;
   the_function
 
-let gen_program (tprog: Tast.tprog) =
+let gen_program (tprog: tprog) =
   (* Declare all of the global variables *)
   let global_vars = Map.empty(module String) in
   let global_vars = List.fold tprog.var_decls

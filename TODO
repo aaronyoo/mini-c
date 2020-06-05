@@ -18,6 +18,6 @@ Iteration 2:
 
 Iteration 3:
   *Add assignment (the ability to assign variables to other values).*
-  ☐ Add assignment statement type to AST.
-  ☐ Add typechecking assignment statements.
-  ☐ Add code generation for assignment statements.
+  ✔ Add assignment statement type to AST. @done(20-06-05 10:42)
+  ✔ Add typechecking assignment statements. @done(20-06-05 10:52)
+  ✔ Add code generation for assignment statements. @done(20-06-05 10:52)

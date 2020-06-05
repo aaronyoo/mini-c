@@ -1,8 +1,17 @@
 type typ = TyInt [@@deriving show]
 
-type expr =
+type ident_expr = {
+  literal: string
+} [@@deriving show]
+
+type assign_stmt = {
+  left: expr;
+  right: expr;
+} [@@deriving show]
+
+and expr =
   | IntLit of int
-  | Ident of string
+  | Ident of ident_expr
 [@@deriving show]
 
 type bind = {
@@ -14,6 +23,7 @@ type bind = {
 
 type stmt =
   | Return of expr
+  | Assign of assign_stmt
 [@@deriving show]
 
 type func = {

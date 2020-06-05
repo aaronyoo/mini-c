@@ -3,11 +3,21 @@ type aexpr = { typ: Ast.typ; expr: texpr } [@@deriving show]
 
 and texpr =
   | TIntLit of int
-  | TIdent of string
+  | TLval of tlval
+[@@deriving show]
+
+and tlval =
+  | TIdent of Ast.ident_expr
+
+type tassign_stmt = {
+  left: aexpr;
+  right: aexpr;
+}
 [@@deriving show]
 
 type tstmt =
   | TReturn of aexpr
+  | TAssign of tassign_stmt
 [@@deriving show]
 
 type tbind = {

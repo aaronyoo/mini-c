@@ -29,3 +29,14 @@ Iteration 4:
   ☐ Add ppx_expect tests for code generator
     This one is a little bit difficult because I am using global variables
     right now. I will come back to it later.
+  ☐ Remove noisy code generation from lvalues
+    Right now, each lvalue that is generated generates a load even if the
+    value of that load is not going to be used. This can be cleaned up by
+    LLVM with DCE but I might want to consider cleaning it up myself.
+
+Iteration 5:
+  *Adding addition, subtraction, multiplication, and division for integers*
+  ✔ Add binary operations to Parser (figure out associativity). @done(20-06-06 16:20)
+  ✔ Add binary operations to AST. @done(20-06-06 16:20)
+  ✔ Add binary opertations to the typechecker. @done(20-06-06 16:20)
+  ✔ Add code generation for binary operations. @done(20-06-06 16:20)

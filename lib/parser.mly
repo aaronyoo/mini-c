@@ -17,9 +17,17 @@ let thd (_, _, c) = c
 %token SEMICOLON
 %token ASSIGN
 
+%token ADD
+%token SUB
+%token MUL
+%token DIV
+
 %token RETURN
 
 %token EOF
+
+%left ADD SUB
+%left MUL DIV
 
 %start <Ast.program> program;
 
@@ -45,8 +53,17 @@ vdecl:
 
 stmt:
   | RETURN; e = expr; SEMICOLON;  { Return e }
-  | e1 = expr; ASSIGN; e2 = expr; SEMICOLON  { Assign ({ left = e1; right = e2 }: assign_stmt) }
+  | e1 = expr; ASSIGN; e2 = expr; SEMICOLON
+    { Assign ({ assign_left = e1; assign_right = e2 }: assign_stmt) }
 
 expr:
   | i = INT  { IntLit i }
   | id = IDENT  { Ident ({ literal = id}: ident_expr) }
+  | e1 = expr; ADD; e2 = expr;
+    { Binop ({binop_type = Add; binop_left = e1; binop_right = e2} :binop_expr)}
+  | e1 = expr; SUB; e2 = expr;
+    { Binop ({binop_type = Sub; binop_left = e1; binop_right = e2} :binop_expr)}
+  | e1 = expr; MUL; e2 = expr;
+    { Binop ({binop_type = Mul; binop_left = e1; binop_right = e2} :binop_expr)}
+  | e1 = expr; DIV; e2 = expr;
+    { Binop ({binop_type = Div; binop_left = e1; binop_right = e2} :binop_expr) }

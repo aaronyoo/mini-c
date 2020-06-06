@@ -30,6 +30,11 @@ rule read =
   | ';'       { SEMICOLON }
   | '='       { ASSIGN }
 
+  | '+'       { ADD }
+  | '-'       { SUB }
+  | '*'       { MUL }
+  | '/'       { DIV }
+
   (* Values. *)
   | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }
 

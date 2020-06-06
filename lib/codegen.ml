@@ -34,19 +34,30 @@ let gen_lval (lval: tlval) (env: env) =
       (* Load the value of the identifier *)
       (build_load v "" builder), v
 
-let gen_expr (expr: aexpr) (env: env) =
+let rec gen_expr (expr: aexpr) (env: env) =
   match expr.expr with
   | TIntLit i -> const_int i64_type i
   (* Discard the lval pointer because we are not writing. *)
   | TLval l -> fst (gen_lval l env)
+  | TBinop b -> gen_binop b env
+
+and gen_binop (bexpr: tbinop_expr) (env: env) =
+  let left = gen_expr bexpr.tbinop_left env in
+  let right = gen_expr bexpr.tbinop_right env in
+  match bexpr.binop_type with
+  (* Only deal with integer types for now. *)
+  | Add -> build_add left right "" builder
+  | Sub -> build_sub left right "" builder
+  | Mul -> build_mul left right "" builder
+  | Div -> build_sdiv left right "" builder
 
 let gen_assign_stmt (assign_stmt: tassign_stmt) (env: env) =
-  let lval = match assign_stmt.left.expr with
+  let lval = match assign_stmt.tassign_left.expr with
     | TLval lval -> lval
     |  _ -> failwith "unreachable"
   in
   let _, left_ptr = gen_lval lval env in
-  let right = gen_expr assign_stmt.right env in
+  let right = gen_expr assign_stmt.tassign_right env in
   build_store right left_ptr builder
 
 let gen_stmt (stmt: tstmt) (env: env) =

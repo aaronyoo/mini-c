@@ -7,7 +7,7 @@ exception Error of string
 type env = {
   (* Map of currently defined variables bound to their type. *)
   vars: typ Map.M(String).t;
-  (* Map of function names bound to their instance *)
+  (* Map of function names bound to their instance. *)
   funcs: func Map.M(String).t;
 }
 
@@ -16,21 +16,39 @@ let check_ident_expr (id_expr: ident_expr) (env: env) =
   | None -> raise (Error ("identifier used before definition: " ^ id_expr.literal))
   | Some typ -> ({ typ; expr = TLval (TIdent id_expr) }: aexpr)
 
-let check_expr (expr: expr) (env: env) =
+let rec check_binop_expr (binop_expr: binop_expr) (env: env) =
+  (* Make sure that the type of the left and right operands are the same. *)
+  let left = check_expr binop_expr.binop_left env in
+  let right = check_expr binop_expr.binop_right env in
+  if not (phys_equal left.typ right.typ)
+  then raise (Error ("Binop left and right types are different: " ^
+                     show_binop_expr binop_expr))
+  else
+    (* The type of the expression is the type of the operands. *)
+    let expr = TBinop {
+        binop_type = binop_expr.binop_type;
+        tbinop_left = left;
+        tbinop_right = right; }
+    in
+    let typ = left.typ in
+    { typ; expr; }
+
+and check_expr (expr: expr) (env: env) =
   match expr with
   | IntLit i -> ({ typ = TyInt; expr = TIntLit i }: aexpr)
   | Ident id -> check_ident_expr id env
+  | Binop b -> check_binop_expr b env
 
 let check_assign_stmt (stmt: assign_stmt) (env: env) =
   (* Type both the left and right hand sides. Also the left hand side must be an lvalue. *)
-  let left_aexpr = match stmt.left with
+  let left_aexpr = match stmt.assign_left with
     | Ident id_expr -> check_ident_expr id_expr env
-    | _ -> raise (Error ("invalid lvalue expression: \n" ^ (show_expr stmt.left)))
+    | _ -> raise (Error ("invalid lvalue expression: \n" ^ (show_expr stmt.assign_left)))
   in
-  let right_aexpr = check_expr stmt.right env in
+  let right_aexpr = check_expr stmt.assign_right env in
   (* The left and right sides must have the same type. *)
   if phys_equal left_aexpr.typ right_aexpr.typ
-  then ({ left = left_aexpr; right = right_aexpr }: tassign_stmt)
+  then ({ tassign_left = left_aexpr; tassign_right = right_aexpr }: tassign_stmt)
   else raise (Error ("invalid assignment: "
                      ^ (show_aexpr left_aexpr)
                      ^ " = " ^ (show_aexpr right_aexpr)))

@@ -1,17 +1,24 @@
 (* Annotated expressions. *)
 type aexpr = { typ: Ast.typ; expr: texpr } [@@deriving show]
 
+and tbinop_expr = {
+  binop_type: Ast.op;
+  tbinop_left: aexpr;
+  tbinop_right: aexpr;
+} [@@deriving show]
+
 and texpr =
   | TIntLit of int
   | TLval of tlval
+  | TBinop of tbinop_expr
 [@@deriving show]
 
 and tlval =
   | TIdent of Ast.ident_expr
 
 type tassign_stmt = {
-  left: aexpr;
-  right: aexpr;
+  tassign_left: aexpr;
+  tassign_right: aexpr;
 }
 [@@deriving show]
 

@@ -9,6 +9,7 @@ let thd (_, _, c) = c
 %token <Ast.typ> TYP
 %token <string> IDENT
 %token <int> INT
+%token <bool> BOOL
 
 %token LPAREN
 %token RPAREN
@@ -21,11 +22,19 @@ let thd (_, _, c) = c
 %token SUB
 %token MUL
 %token DIV
+%token EQ
+%token NEQ
+%token LT
+%token LEQ
+%token GT
+%token GEQ
 
 %token RETURN
 
 %token EOF
 
+%left EQ NEQ
+%left LT GT LEQ GEQ
 %left ADD SUB
 %left MUL DIV
 
@@ -58,6 +67,7 @@ stmt:
 
 expr:
   | i = INT  { IntLit i }
+  | b = BOOL  { BoolLit b }
   | id = IDENT  { Ident ({ literal = id}: ident_expr) }
   | e1 = expr; ADD; e2 = expr;
     { Binop ({binop_type = Add; binop_left = e1; binop_right = e2} :binop_expr)}
@@ -66,4 +76,16 @@ expr:
   | e1 = expr; MUL; e2 = expr;
     { Binop ({binop_type = Mul; binop_left = e1; binop_right = e2} :binop_expr)}
   | e1 = expr; DIV; e2 = expr;
-    { Binop ({binop_type = Div; binop_left = e1; binop_right = e2} :binop_expr) }
+    { Binop ({binop_type = Div; binop_left = e1; binop_right = e2} :binop_expr)}
+  | e1 = expr; EQ; e2 = expr;
+    { Binop ({binop_type = Eq; binop_left = e1; binop_right = e2} :binop_expr)}
+  | e1 = expr; NEQ; e2 = expr;
+    { Binop ({binop_type = Neq; binop_left = e1; binop_right = e2} :binop_expr)}
+  | e1 = expr; LT; e2 = expr;
+    {Binop ({binop_type = Less; binop_left = e1; binop_right = e2}:binop_expr)}
+  | e1 = expr; GT; e2 = expr;
+    {Binop ({binop_type = Greater; binop_left = e1; binop_right = e2}:binop_expr)}
+  | e1 = expr; LEQ; e2 = expr;
+    {Binop ({binop_type = Leq; binop_left = e1; binop_right = e2}:binop_expr)}
+  | e1 = expr; GEQ; e2 = expr;
+    {Binop ({binop_type = Geq; binop_left = e1; binop_right = e2}:binop_expr)}

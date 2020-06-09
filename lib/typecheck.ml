@@ -16,28 +16,44 @@ let check_ident_expr (id_expr: ident_expr) (env: env) =
   | None -> raise (Error ("identifier used before definition: " ^ id_expr.literal))
   | Some typ -> ({ typ; expr = TLval (TIdent id_expr) }: aexpr)
 
-let rec check_binop_expr (binop_expr: binop_expr) (env: env) =
-  (* Make sure that the type of the left and right operands are the same. *)
-  let left = check_expr binop_expr.binop_left env in
-  let right = check_expr binop_expr.binop_right env in
-  if not (phys_equal left.typ right.typ)
-  then raise (Error ("Binop left and right types are different: " ^
-                     show_binop_expr binop_expr))
-  else
-    (* The type of the expression is the type of the operands. *)
-    let expr = TBinop {
-        binop_type = binop_expr.binop_type;
-        tbinop_left = left;
-        tbinop_right = right; }
-    in
-    let typ = left.typ in
-    { typ; expr; }
-
-and check_expr (expr: expr) (env: env) =
+let rec check_expr (expr: expr) (env: env) =
   match expr with
   | IntLit i -> ({ typ = TyInt; expr = TIntLit i }: aexpr)
+  | BoolLit b -> ({ typ = TyBool; expr = TBoolLit b }: aexpr)
   | Ident id -> check_ident_expr id env
   | Binop b -> check_binop_expr b env
+
+and check_binop_expr (binop_expr: binop_expr) (env: env) =
+  let left = check_expr binop_expr.binop_left env in
+  let right = check_expr binop_expr.binop_right env in
+  let expr = TBinop {
+      binop_type = binop_expr.binop_type;
+      tbinop_left = left;
+      tbinop_right = right; }
+  in
+  (* The allowed types of the operands is dependent on the operator. *)
+  match binop_expr.binop_type with
+  | Add | Sub | Mul | Div ->
+    (* All of these operations are arithmetic and require numbers. *)
+    (match (left.typ, right.typ) with
+     | (TyInt, TyInt) -> let typ = left.typ in { typ; expr }
+     | _ -> raise (Error ("Operation has invalid operand types: "
+                          ^ (show_binop_expr binop_expr)))
+    )
+  | Eq | Neq ->
+    (* All of these operations operate on comparable data types. *)
+    (match (left.typ, right.typ) with
+     | (TyInt, TyInt) | (TyBool, TyBool) -> let typ = TyBool in { typ; expr }
+     | _ -> raise (Error ("invalid binary operation" ^
+                          (show_binop_expr binop_expr)))
+    )
+  | Less | Greater | Leq | Geq ->
+    (* All of these operations operate on comparable, partial ordered types. *)
+    (match (left.typ, right.typ) with
+     | (TyInt, TyInt) -> let typ = TyBool in { typ; expr }
+     | _ -> raise (Error ("invalid binary operation" ^
+                          (show_binop_expr binop_expr)))
+    )
 
 let check_assign_stmt (stmt: assign_stmt) (env: env) =
   (* Type both the left and right hand sides. Also the left hand side must be an lvalue. *)

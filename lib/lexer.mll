@@ -34,15 +34,24 @@ rule read =
   | '-'       { SUB }
   | '*'       { MUL }
   | '/'       { DIV }
+  | "=="      { EQ }
+  | "!="      { NEQ }
+  | '<'       { LT }
+  | "<="      { LEQ }
+  | '>'       { GT }
+  | ">="      { GEQ }
 
   (* Values. *)
   | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }
 
   (* Reserved Words. *)
   | "return"  { RETURN }
+  | "true"    { BOOL true }
+  | "false"   { BOOL false }
 
   (* Types. *)
   | "int"     { TYP TyInt }
+  | "bool"    { TYP TyBool }
 
   | ident     { IDENT (Lexing.lexeme lexbuf) }
 

@@ -40,3 +40,12 @@ Iteration 5:
   ✔ Add binary operations to AST. @done(20-06-06 16:20)
   ✔ Add binary opertations to the typechecker. @done(20-06-06 16:20)
   ✔ Add code generation for binary operations. @done(20-06-06 16:20)
+
+Iteration 6:
+  *Adding booleans, equal, not equal, less than, greater than.*
+  ✔ Add booleans to parser. @done(20-06-08 19:12)
+  ✔ Add booleans to AST. @done(20-06-08 19:12)
+  ✔ Add binary operations on booleans. @done(20-06-08 19:12)
+
+Iteration 7:
+  *This will either be getting functions to work or going for control flow.*

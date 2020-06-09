@@ -1,9 +1,17 @@
-type typ = TyInt [@@deriving show]
+type typ = TyInt
+         | TyBool
+[@@deriving show]
 
 type op = Add
         | Sub
         | Mul
         | Div
+        | Eq
+        | Neq
+        | Less
+        | Greater
+        | Leq
+        | Geq
 [@@deriving show]
 
 type ident_expr = {
@@ -23,6 +31,7 @@ and assign_stmt = {
 
 and expr =
   | IntLit of int
+  | BoolLit of bool
   | Ident of ident_expr
   | Binop of binop_expr
 [@@deriving show]

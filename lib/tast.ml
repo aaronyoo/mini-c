@@ -9,6 +9,7 @@ and tbinop_expr = {
 
 and texpr =
   | TIntLit of int
+  | TBoolLit of bool
   | TLval of tlval
   | TBinop of tbinop_expr
 [@@deriving show]

@@ -48,4 +48,10 @@ Iteration 6:
   ✔ Add binary operations on booleans. @done(20-06-08 19:12)
 
 Iteration 7:
-  *This will either be getting functions to work or going for control flow.*
+  *Add if statements.*
+  ✔ Add if statements to parser and AST. @done(20-06-08 22:26)
+  ✔ Add if statements to typechecker. @done(20-06-08 22:26)
+  ✔ Add if statements to code generator. @done(20-06-08 22:27)
+  ✔ Add the optional else block to if statements. @done(20-06-11 22:21)
+  ✔ Add support for block statements. @done(20-06-11 22:21)
+  ✔ Fix bug that causes opposite branching in condition logic. @done(20-06-09 18:11)

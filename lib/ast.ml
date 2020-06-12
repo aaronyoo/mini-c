@@ -24,11 +24,6 @@ type binop_expr = {
   binop_right: expr;
 } [@@deriving show]
 
-and assign_stmt = {
-  assign_left: expr;
-  assign_right: expr;
-} [@@deriving show]
-
 and expr =
   | IntLit of int
   | BoolLit of bool
@@ -43,9 +38,26 @@ type bind = {
 }
 [@@deriving show]
 
-type stmt =
+type assign_stmt = {
+  assign_left: expr;
+  assign_right: expr;
+} [@@deriving show]
+
+type if_stmt = {
+  cond: expr;
+  then_br: stmt;
+  else_br: stmt;
+} [@@deriving show]
+
+and block_stmt = {
+  block_body: stmt list;
+}
+
+and stmt =
   | Return of expr
   | Assign of assign_stmt
+  | If of if_stmt
+  | Block of block_stmt
 [@@deriving show]
 
 type func = {

@@ -16,17 +16,29 @@ and texpr =
 
 and tlval =
   | TIdent of Ast.ident_expr
-
-type tassign_stmt = {
-  tassign_left: aexpr;
-  tassign_right: aexpr;
-}
 [@@deriving show]
 
 type tstmt =
   | TReturn of aexpr
   | TAssign of tassign_stmt
+  | TIf of tif_stmt
+  | TBlock of tblock_stmt
 [@@deriving show]
+
+and tassign_stmt = {
+  tassign_left: aexpr;
+  tassign_right: aexpr;
+} [@@deriving show]
+
+and tif_stmt = {
+  cond: aexpr;
+  then_br: tstmt;
+  else_br: tstmt;
+} [@@deriving show]
+
+and tblock_stmt = {
+  tblock_body: tstmt list;
+}
 
 type tbind = {
   bind_name: string;

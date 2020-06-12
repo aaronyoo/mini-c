@@ -373,3 +373,108 @@ let%expect_test "iteration 6 (booleans and more operators)" =
         ]
       }
   |}]
+
+let%expect_test "iteration 7 (if statements)" =
+  let program = Helper.parse {|
+    int main()
+    {
+      int i = 0;
+      if (i > 5)
+      {
+        i = 10;
+      }
+      else
+      {
+        i = 2;
+      }
+
+      if (i > 5) {
+        i = 5;
+      }
+      return i;
+    }
+  |} in
+  let typed_prog = Minicc.Typecheck.check_program program in
+  let s = Minicc.Tast.show_tprog typed_prog in
+  printf "%s" s;
+  [%expect {|
+    { Tast.var_decls = [];
+      func_decls =
+      [{ Tast.ret_typ = Ast.TyInt; name = "main";
+         locals =
+         [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
+            initial_value =
+            (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) }) }
+           ];
+         body =
+         [(Tast.TIf
+             { Tast.cond =
+               { Tast.typ = Ast.TyBool;
+                 expr =
+                 (Tast.TBinop
+                    { Tast.binop_type = Ast.Greater;
+                      tbinop_left =
+                      { Tast.typ = Ast.TyInt;
+                        expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
+                      tbinop_right =
+                      { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) } })
+                 };
+               then_br =
+               (Tast.TBlock
+                  { Tast.tblock_body =
+                    [(Tast.TAssign
+                        { Tast.tassign_left =
+                          { Tast.typ = Ast.TyInt;
+                            expr =
+                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
+                          tassign_right =
+                          { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 10) } })
+                      ]
+                    });
+               else_br =
+               (Tast.TBlock
+                  { Tast.tblock_body =
+                    [(Tast.TAssign
+                        { Tast.tassign_left =
+                          { Tast.typ = Ast.TyInt;
+                            expr =
+                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
+                          tassign_right =
+                          { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 2) } })
+                      ]
+                    })
+               });
+           (Tast.TIf
+              { Tast.cond =
+                { Tast.typ = Ast.TyBool;
+                  expr =
+                  (Tast.TBinop
+                     { Tast.binop_type = Ast.Greater;
+                       tbinop_left =
+                       { Tast.typ = Ast.TyInt;
+                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" }))
+                         };
+                       tbinop_right =
+                       { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) } })
+                  };
+                then_br =
+                (Tast.TBlock
+                   { Tast.tblock_body =
+                     [(Tast.TAssign
+                         { Tast.tassign_left =
+                           { Tast.typ = Ast.TyInt;
+                             expr =
+                             (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
+                           tassign_right =
+                           { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) } })
+                       ]
+                     });
+                else_br = (Tast.TBlock { Tast.tblock_body = [] }) });
+           (Tast.TReturn
+              { Tast.typ = Ast.TyInt;
+                expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) })
+           ]
+         }
+        ]
+      }
+  |}]

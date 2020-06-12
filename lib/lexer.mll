@@ -48,6 +48,8 @@ rule read =
   | "return"  { RETURN }
   | "true"    { BOOL true }
   | "false"   { BOOL false }
+  | "if"      { IF }
+  | "else"    { ELSE }
 
   (* Types. *)
   | "int"     { TYP TyInt }

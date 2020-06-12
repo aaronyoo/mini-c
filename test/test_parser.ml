@@ -257,3 +257,78 @@ let%expect_test "iteration 6 (booleans and more operators)" =
         ]
       }
   |}]
+
+let%expect_test "iteration 7 (if statements)" =
+  let program = Helper.parse {|
+    int main()
+    {
+      int i = 0;
+      if (i > 5)
+      {
+        i = 10;
+      }
+      else
+      {
+        i = 2;
+      }
+
+      if (i > 5) {
+        i = 5;
+      }
+      return i;
+    }
+  |} in
+  let s = Minicc.Ast.show_program program in
+  printf "%s" s;
+  [%expect {|
+    { Ast.var_decls = [];
+      func_decls =
+      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+         locals =
+         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
+            initial_value = (Some (Ast.IntLit 0)) }
+           ];
+         body =
+         [(Ast.If
+             { Ast.cond =
+               (Ast.Binop
+                  { Ast.binop_type = Ast.Greater;
+                    binop_left = (Ast.Ident { Ast.literal = "i" });
+                    binop_right = (Ast.IntLit 5) });
+               then_br =
+               (Ast.Block
+                  { Ast.block_body =
+                    [(Ast.Assign
+                        { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
+                          assign_right = (Ast.IntLit 10) })
+                      ]
+                    });
+               else_br =
+               (Ast.Block
+                  { Ast.block_body =
+                    [(Ast.Assign
+                        { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
+                          assign_right = (Ast.IntLit 2) })
+                      ]
+                    })
+               });
+           (Ast.If
+              { Ast.cond =
+                (Ast.Binop
+                   { Ast.binop_type = Ast.Greater;
+                     binop_left = (Ast.Ident { Ast.literal = "i" });
+                     binop_right = (Ast.IntLit 5) });
+                then_br =
+                (Ast.Block
+                   { Ast.block_body =
+                     [(Ast.Assign
+                         { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
+                           assign_right = (Ast.IntLit 5) })
+                       ]
+                     });
+                else_br = (Ast.Block { Ast.block_body = [] }) });
+           (Ast.Return (Ast.Ident { Ast.literal = "i" }))]
+         }
+        ]
+      }
+  |}]

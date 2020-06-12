@@ -55,7 +55,19 @@ and check_binop_expr (binop_expr: binop_expr) (env: env) =
                           (show_binop_expr binop_expr)))
     )
 
-let check_assign_stmt (stmt: assign_stmt) (env: env) =
+let rec check_stmt (func: func) (stmt: stmt) (env: env) =
+  match stmt with
+  | Return e ->
+    (* The returned type must match the functions declared return type. *)
+    let t = check_expr e env in
+    if phys_equal t.typ func.ret_typ
+    then TReturn t
+    else raise (Error "return type mismatch")
+  | Assign assign_stmt -> TAssign (check_assign_stmt assign_stmt env)
+  | If if_stmt -> TIf (check_if_stmt func if_stmt env)
+  | Block block_stmt -> TBlock (check_block_stmt func block_stmt env)
+
+and check_assign_stmt (stmt: assign_stmt) (env: env) =
   (* Type both the left and right hand sides. Also the left hand side must be an lvalue. *)
   let left_aexpr = match stmt.assign_left with
     | Ident id_expr -> check_ident_expr id_expr env
@@ -69,15 +81,23 @@ let check_assign_stmt (stmt: assign_stmt) (env: env) =
                      ^ (show_aexpr left_aexpr)
                      ^ " = " ^ (show_aexpr right_aexpr)))
 
-let check_stmt (func: func) (stmt: stmt) (env: env) =
-  match stmt with
-  | Return e ->
-    (* The returned type must match the functions declared return type. *)
-    let t = check_expr e env in
-    if phys_equal t.typ func.ret_typ
-    then TReturn t
-    else raise (Error "return type mismatch")
-  | Assign assign_stmt -> TAssign (check_assign_stmt assign_stmt env)
+and check_if_stmt (func: func) (if_stmt: if_stmt) (env: env) =
+  (* Typecheck the condition and make sure its yields a boolean type. *)
+  let cond = check_expr if_stmt.cond env in
+  if not (phys_equal cond.typ TyBool)
+  then raise (Error ("if stmt condition is not boolean: " ^
+                     (show_if_stmt if_stmt)))
+  else
+    (* Typecheck the body. *)
+    let then_br = check_stmt func if_stmt.then_br env in
+    let else_br = check_stmt func if_stmt.else_br env in
+    ({ cond; then_br; else_br }: tif_stmt)
+
+and check_block_stmt (func: func) (block_stmt: block_stmt) (env: env) =
+  let tblock_body = List.map block_stmt.block_body
+      ~f: (fun stmt -> check_stmt func stmt env)
+  in
+  ({ tblock_body }: tblock_stmt)
 
 let check_bind (b: bind) (env: env) =
   let vars = Map.set env.vars ~key: b.bind_name ~data: b.bind_type in

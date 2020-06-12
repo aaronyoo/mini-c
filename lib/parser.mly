@@ -30,9 +30,13 @@ let thd (_, _, c) = c
 %token GEQ
 
 %token RETURN
+%token IF
+%token ELSE
 
 %token EOF
 
+%nonassoc NOELSE
+%nonassoc ELSE
 %left EQ NEQ
 %left LT GT LEQ GEQ
 %left ADD SUB
@@ -64,6 +68,13 @@ stmt:
   | RETURN; e = expr; SEMICOLON;  { Return e }
   | e1 = expr; ASSIGN; e2 = expr; SEMICOLON
     { Assign ({ assign_left = e1; assign_right = e2 }: assign_stmt) }
+  | LBRACE; l = list(stmt); RBRACE;
+    { Block ({block_body = l}: block_stmt) }
+  | IF; LPAREN; cond = expr; RPAREN; then_br = stmt; %prec NOELSE
+    { If ({ cond; then_br; else_br = Block ({ block_body = [] }: block_stmt) }: if_stmt) }
+  | IF; LPAREN; cond = expr; RPAREN; then_br = stmt; ELSE; else_br = stmt
+    { If ({ cond; then_br; else_br }: if_stmt) }
+
 
 expr:
   | i = INT  { IntLit i }

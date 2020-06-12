@@ -62,22 +62,22 @@ and gen_binop (bexpr: tbinop_expr) (env: env) =
      | Sub -> build_sub left right "" builder
      | Mul -> build_mul left right "" builder
      | Div -> build_sdiv left right "" builder
-     | Eq -> build_icmp Llvm.Icmp.Eq left right "" builder
-     | Neq -> build_icmp Llvm.Icmp.Ne left right "" builder
-     | Greater -> build_icmp Llvm.Icmp.Sgt left right "" builder
-     | Geq -> build_icmp Llvm.Icmp.Sge left right "" builder
-     | Less -> build_icmp Llvm.Icmp.Slt left right "" builder
-     | Leq -> build_icmp Llvm.Icmp.Sle left right "" builder
+     | Eq -> build_icmp Icmp.Eq left right "" builder
+     | Neq -> build_icmp Icmp.Ne left right "" builder
+     | Greater -> build_icmp Icmp.Sgt left right "" builder
+     | Geq -> build_icmp Icmp.Sge left right "" builder
+     | Less -> build_icmp Icmp.Slt left right "" builder
+     | Leq -> build_icmp Icmp.Sle left right "" builder
     )
   | (TyBool, TyBool) ->
     (* Operations defined over pairs of bools. *)
     (match bexpr.binop_type with
-     | Eq -> build_icmp Llvm.Icmp.Eq left right "" builder
-     | Neq -> build_icmp Llvm.Icmp.Ne left right "" builder
-     | Greater -> build_icmp Llvm.Icmp.Sgt left right "" builder
-     | Geq -> build_icmp Llvm.Icmp.Sge left right "" builder
-     | Less -> build_icmp Llvm.Icmp.Slt left right "" builder
-     | Leq -> build_icmp Llvm.Icmp.Sle left right "" builder
+     | Eq -> build_icmp Icmp.Eq left right "" builder
+     | Neq -> build_icmp Icmp.Ne left right "" builder
+     | Greater -> build_icmp Icmp.Sgt left right "" builder
+     | Geq -> build_icmp Icmp.Sge left right "" builder
+     | Less -> build_icmp Icmp.Slt left right "" builder
+     | Leq -> build_icmp Icmp.Sle left right "" builder
      | _ -> failwith ("unimplemented gen_binop: \n" ^
                       (show_tbinop_expr bexpr))
     )
@@ -93,10 +93,61 @@ let gen_assign_stmt (assign_stmt: tassign_stmt) (env: env) =
   let right = gen_expr assign_stmt.tassign_right env in
   build_store right left_ptr builder
 
-let gen_stmt (stmt: tstmt) (env: env) =
+let rec gen_if_stmt (if_stmt: tif_stmt) (env: env) =
+  (* Emit condition check into current block. *)
+  let cond = gen_expr if_stmt.cond env in
+  let one = const_int i1_type 1 in
+  let cond_val = build_icmp Icmp.Eq cond one "ifcond" builder in
+
+  let start_bb = insertion_block builder in
+  let the_function = block_parent start_bb in
+  let then_bb = append_block context "then" the_function in
+  let else_bb = append_block context "else" the_function in
+
+  (* Emit then block. *)
+  position_at_end then_bb builder;
+  let then_val = gen_stmt if_stmt.then_br env in
+
+  (* Generating the then block can dirty the builder. *)
+  let new_then_bb = insertion_block builder in
+
+  (* Emit else block. *)
+  position_at_end else_bb builder;
+  let else_val = gen_stmt if_stmt.else_br env in
+  let new_else_bb = insertion_block builder in
+
+  (* Emit merge block. *)
+  let merge_bb = append_block context "ifcont" the_function in
+  position_at_end merge_bb builder;
+
+  (* Return to the start block to add conditional branch. *)
+  position_at_end start_bb builder;
+  ignore(build_cond_br cond_val then_bb else_bb builder);
+
+  (* Set unconditional branch at end of 'then' block. *)
+  position_at_end new_then_bb builder;
+  ignore(build_br merge_bb builder);
+
+  (* Set unconditional branch at end of 'else' block. *)
+  position_at_end new_else_bb builder;
+  ignore(build_br merge_bb builder);
+
+  position_at_end merge_bb builder;
+
+  ignore(then_val);
+  ignore(else_val);
+
+and gen_block_stmt (block_stmt: tblock_stmt) (env: env) =
+  List.iter block_stmt.tblock_body ~f: (fun tstmt -> gen_stmt tstmt env)
+
+and gen_stmt (stmt: tstmt) (env: env) =
+  (* Since these are all statements we can ignore any llvalues that are
+     returned. *)
   match stmt with
-  | TReturn expr -> build_ret (gen_expr expr env) builder
-  | TAssign assign_stmt -> gen_assign_stmt assign_stmt env
+  | TReturn expr -> ignore(build_ret (gen_expr expr env) builder)
+  | TAssign assign_stmt -> ignore(gen_assign_stmt assign_stmt env)
+  | TIf if_stmt -> gen_if_stmt if_stmt env
+  | TBlock block_stmt -> gen_block_stmt block_stmt env
 
 let gen_func_decl (tfunc: tfunc) (env: env) =
   (* For now, there are no arguments. *)

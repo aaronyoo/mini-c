@@ -13,7 +13,7 @@ let%expect_test "iteration_1" =
   [%expect {|
     { Tast.var_decls = [];
       func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; locals = [];
+      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = []; locals = [];
          body =
          [(Tast.TReturn { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) })] }
         ]
@@ -34,7 +34,7 @@ let%expect_test "iteration_2" =
   [%expect {|
     { Tast.var_decls = [];
       func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main";
+      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
             initial_value =
@@ -65,7 +65,7 @@ let%expect_test "iteration_3" =
   [%expect {|
     { Tast.var_decls = [];
       func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main";
+      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
             initial_value =
@@ -105,7 +105,7 @@ let%expect_test "iteration_3" =
   [%expect {|
     { Tast.var_decls = [];
       func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main";
+      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
             initial_value =
@@ -213,7 +213,7 @@ let%expect_test "iteration 6 (booleans and more operators)" =
   [%expect {|
     { Tast.var_decls = [];
       func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main";
+      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
             initial_value =
@@ -400,7 +400,7 @@ let%expect_test "iteration 7 (if statements)" =
   [%expect {|
     { Tast.var_decls = [];
       func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main";
+      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
             initial_value =
@@ -475,6 +475,119 @@ let%expect_test "iteration 7 (if statements)" =
                 expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) })
            ]
          }
+        ]
+      }
+  |}]
+
+let%expect_test "iteration 8 (no argument function calls)" =
+  let program = Helper.parse {|
+    int main()
+    {
+      int a = 2;
+      int b = 3;
+      return add();
+    }
+
+    int add()
+    {
+      return 5;
+    }
+  |} in
+  let typed_prog = Minicc.Typecheck.check_program program in
+  let s = Minicc.Tast.show_tprog typed_prog in
+  printf "%s" s;
+  [%expect {|
+    { Tast.var_decls = [];
+      func_decls =
+      [{ Tast.ret_typ = Ast.TyInt; name = "add"; params = []; locals = [];
+         body =
+         [(Tast.TReturn { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) })] };
+        { Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
+          locals =
+          [{ Tast.bind_name = "a"; bind_type = Ast.TyInt;
+             initial_value =
+             (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 2) }) };
+            { Tast.bind_name = "b"; bind_type = Ast.TyInt;
+              initial_value =
+              (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) }) }
+            ];
+          body =
+          [(Tast.TReturn
+              { Tast.typ = Ast.TyInt;
+                expr = (Tast.TCall { Tast.tcallee = "add"; targs = [] }) })
+            ]
+          }
+        ]
+      }
+  |}]
+
+let%expect_test "iteration 8 (function call with arguments)" =
+  let program = Helper.parse {|
+    int main()
+    {
+      int a = 3;
+      int b = 3;
+      return add(a, b);
+    }
+
+    int add(int x, int y)
+    {
+      return x + y;
+    }
+  |} in
+  let typed_prog = Minicc.Typecheck.check_program program in
+  let s = Minicc.Tast.show_tprog typed_prog in
+  printf "%s" s;
+  [%expect {|
+    { Tast.var_decls = [];
+      func_decls =
+      [{ Tast.ret_typ = Ast.TyInt; name = "add";
+         params =
+         [{ Tast.bind_name = "x"; bind_type = Ast.TyInt; initial_value = None };
+           { Tast.bind_name = "y"; bind_type = Ast.TyInt; initial_value = None }];
+         locals = [];
+         body =
+         [(Tast.TReturn
+             { Tast.typ = Ast.TyInt;
+               expr =
+               (Tast.TBinop
+                  { Tast.binop_type = Ast.Add;
+                    tbinop_left =
+                    { Tast.typ = Ast.TyInt;
+                      expr = (Tast.TLval (Tast.TIdent { Ast.literal = "x" })) };
+                    tbinop_right =
+                    { Tast.typ = Ast.TyInt;
+                      expr = (Tast.TLval (Tast.TIdent { Ast.literal = "y" })) }
+                    })
+               })
+           ]
+         };
+        { Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
+          locals =
+          [{ Tast.bind_name = "a"; bind_type = Ast.TyInt;
+             initial_value =
+             (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) }) };
+            { Tast.bind_name = "b"; bind_type = Ast.TyInt;
+              initial_value =
+              (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) }) }
+            ];
+          body =
+          [(Tast.TReturn
+              { Tast.typ = Ast.TyInt;
+                expr =
+                (Tast.TCall
+                   { Tast.tcallee = "add";
+                     targs =
+                     [{ Tast.typ = Ast.TyInt;
+                        expr = (Tast.TLval (Tast.TIdent { Ast.literal = "a" })) };
+                       { Tast.typ = Ast.TyInt;
+                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "b" }))
+                         }
+                       ]
+                     })
+                })
+            ]
+          }
         ]
       }
   |}]

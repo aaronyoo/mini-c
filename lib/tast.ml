@@ -7,11 +7,17 @@ and tbinop_expr = {
   tbinop_right: aexpr;
 } [@@deriving show]
 
+and tcall_expr = {
+  tcallee: string;
+  targs: aexpr list;
+} [@@deriving show]
+
 and texpr =
   | TIntLit of int
   | TBoolLit of bool
   | TLval of tlval
   | TBinop of tbinop_expr
+  | TCall of tcall_expr
 [@@deriving show]
 
 and tlval =
@@ -38,7 +44,7 @@ and tif_stmt = {
 
 and tblock_stmt = {
   tblock_body: tstmt list;
-}
+} [@@deriving show]
 
 type tbind = {
   bind_name: string;
@@ -50,6 +56,7 @@ type tbind = {
 type tfunc = {
   ret_typ: Ast.typ;
   name: string;
+  params: tbind list;
   locals: tbind list;
   body: tstmt list;
 }

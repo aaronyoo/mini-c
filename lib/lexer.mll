@@ -28,6 +28,7 @@ rule read =
   | '{'       { LBRACE }
   | '}'       { RBRACE }
   | ';'       { SEMICOLON }
+  | ','       { COMMA }
   | '='       { ASSIGN }
 
   | '+'       { ADD }

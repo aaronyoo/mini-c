@@ -12,7 +12,7 @@ let%expect_test "iteration_1" =
   [%expect {|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; locals = [];
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = []; locals = [];
          body = [(Ast.Return (Ast.IntLit 0))] }
         ]
       }
@@ -31,7 +31,7 @@ let%expect_test "iteration_2" =
   [%expect {|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
             initial_value = (Some (Ast.IntLit 0)) }
@@ -55,7 +55,7 @@ let%expect_test "iteration_3" =
   [%expect {|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
             initial_value = (Some (Ast.IntLit 90)) }
@@ -87,7 +87,7 @@ let%expect_test "iteration_5" =
   [%expect{|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
             initial_value = (Some (Ast.IntLit 0)) }
@@ -143,7 +143,7 @@ let%expect_test "operator precedence" =
   [%expect {|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
             initial_value =
@@ -186,7 +186,7 @@ let%expect_test "iteration 6 (booleans and more operators)" =
   [%expect {|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
             initial_value = (Some (Ast.IntLit 2)) };
@@ -283,7 +283,7 @@ let%expect_test "iteration 7 (if statements)" =
   [%expect {|
     { Ast.var_decls = [];
       func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main";
+      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
          locals =
          [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
             initial_value = (Some (Ast.IntLit 0)) }
@@ -329,6 +329,92 @@ let%expect_test "iteration 7 (if statements)" =
                 else_br = (Ast.Block { Ast.block_body = [] }) });
            (Ast.Return (Ast.Ident { Ast.literal = "i" }))]
          }
+        ]
+      }
+  |}]
+
+let%expect_test "iteration 8 (no argument function calls)" =
+  let program = Helper.parse {|
+    int main()
+    {
+      int a = 2;
+      int b = 3;
+      return add();
+    }
+
+    int add()
+    {
+      return 5;
+    }
+  |} in
+  let s = Minicc.Ast.show_program program in
+  printf "%s" s;
+  [%expect {|
+    { Ast.var_decls = [];
+      func_decls =
+      [{ Ast.ret_typ = Ast.TyInt; name = "add"; params = []; locals = [];
+         body = [(Ast.Return (Ast.IntLit 5))] };
+        { Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
+          locals =
+          [{ Ast.bind_type = Ast.TyInt; bind_name = "a";
+             initial_value = (Some (Ast.IntLit 2)) };
+            { Ast.bind_type = Ast.TyInt; bind_name = "b";
+              initial_value = (Some (Ast.IntLit 3)) }
+            ];
+          body = [(Ast.Return (Ast.Call { Ast.callee = "add"; args = [] }))] }
+        ]
+      }
+  |}]
+
+let%expect_test "iteration 8 (function call with argument)" =
+  let program = Helper.parse {|
+    int main()
+    {
+      int a = 3;
+      int b = 3;
+      return add(a, b);
+    }
+
+    int add(int x, int y)
+    {
+      return x + y;
+    }
+  |} in
+  let s = Minicc.Ast.show_program program in
+  printf "%s" s;
+  [%expect {|
+    { Ast.var_decls = [];
+      func_decls =
+      [{ Ast.ret_typ = Ast.TyInt; name = "add";
+         params =
+         [{ Ast.bind_type = Ast.TyInt; bind_name = "x"; initial_value = None };
+           { Ast.bind_type = Ast.TyInt; bind_name = "y"; initial_value = None }];
+         locals = [];
+         body =
+         [(Ast.Return
+             (Ast.Binop
+                { Ast.binop_type = Ast.Add;
+                  binop_left = (Ast.Ident { Ast.literal = "x" });
+                  binop_right = (Ast.Ident { Ast.literal = "y" }) }))
+           ]
+         };
+        { Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
+          locals =
+          [{ Ast.bind_type = Ast.TyInt; bind_name = "a";
+             initial_value = (Some (Ast.IntLit 3)) };
+            { Ast.bind_type = Ast.TyInt; bind_name = "b";
+              initial_value = (Some (Ast.IntLit 3)) }
+            ];
+          body =
+          [(Ast.Return
+              (Ast.Call
+                 { Ast.callee = "add";
+                   args =
+                   [(Ast.Ident { Ast.literal = "a" });
+                     (Ast.Ident { Ast.literal = "b" })]
+                   }))
+            ]
+          }
         ]
       }
   |}]

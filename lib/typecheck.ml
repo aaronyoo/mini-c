@@ -22,6 +22,7 @@ let rec check_expr (expr: expr) (env: env) =
   | BoolLit b -> ({ typ = TyBool; expr = TBoolLit b }: aexpr)
   | Ident id -> check_ident_expr id env
   | Binop b -> check_binop_expr b env
+  | Call c -> check_call_expr c env
 
 and check_binop_expr (binop_expr: binop_expr) (env: env) =
   let left = check_expr binop_expr.binop_left env in
@@ -54,6 +55,20 @@ and check_binop_expr (binop_expr: binop_expr) (env: env) =
      | _ -> raise (Error ("invalid binary operation" ^
                           (show_binop_expr binop_expr)))
     )
+
+and check_call_expr (call_expr: call_expr) (env: env) =
+  (* Look up the callee in a function table. *)
+  let func = match Map.find env.funcs call_expr.callee with
+    | Some f -> f
+    | None -> raise (Error ("callee not found: " ^ call_expr.callee))
+  in
+  (* The type of the call expr is the type of the return value of the callee. *)
+  let typ = func.ret_typ in
+  let tcallee = call_expr.callee in
+  (* Type each one of the arguments. *)
+  let targs = List.map call_expr.args ~f:(fun arg -> check_expr arg env) in
+  let tcall = ({ tcallee; targs }: tcall_expr) in
+  ({ typ; expr = TCall tcall }: aexpr)
 
 let rec check_stmt (func: func) (stmt: stmt) (env: env) =
   match stmt with
@@ -112,23 +127,27 @@ let check_bind (b: bind) (env: env) =
   { vars; funcs = env.funcs }, tbind
 
 let check_func (func: func) (env: env) =
-  (* Save variables to be restored at the end *)
+  (* Save variables to be restored at the end. *)
   let saved_vars = env.vars in
   (* Make sure that there are no overlapping function names. *)
   if Map.mem env.funcs func.name
   then raise (Error ("duplicate function name -- "  ^ func.name))
   else
-    (** Add name to function map *)
+    (** Add name to function map. *)
     let funcs = Map.set env.funcs ~key: func.name ~data: func in
-    (** Add each variable to the environment *)
-    let env, var_decls = List.fold_map func.locals
+    (** Add each variable to the environment. *)
+    let env, var_decls = List.fold_map (func.locals)
+        ~init: env
+        ~f: (fun env b -> check_bind b env)
+    in
+    let env, params = List.fold_map (func.params)
         ~init: env
         ~f: (fun env b -> check_bind b env)
     in
     (* Type each statement. *)
     let typed_stmts = List.map func.body ~f: (fun s -> check_stmt func s env) in
     { vars = saved_vars; funcs } ,
-    ({ret_typ = func.ret_typ; name = func.name; locals = var_decls; body = typed_stmts}: tfunc)
+    ({ret_typ = func.ret_typ; name = func.name; params; locals = var_decls; body = typed_stmts}: tfunc)
 
 let check_program (prog: program) : tprog =
   (* Create an empty environment. *)

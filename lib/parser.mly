@@ -16,6 +16,7 @@ let thd (_, _, c) = c
 %token LBRACE
 %token RBRACE
 %token SEMICOLON
+%token COMMA
 %token ASSIGN
 
 %token ADD
@@ -55,8 +56,12 @@ decls:
   | d = decls; f = fdecl  { (fst d, f :: snd d) }
 
 fdecl:
-  t = TYP; i = IDENT; LPAREN; RPAREN; LBRACE; vl = list(vdecl); sl = list(stmt); RBRACE;
-  { {ret_typ = t; name = i; locals = vl; body = sl}: func }
+  t = TYP; i = IDENT; LPAREN; params = separated_list(COMMA, bind); RPAREN; LBRACE; vl = list(vdecl); sl = list(stmt); RBRACE;
+  { {ret_typ = t; name = i; params; locals = vl; body = sl}: func }
+
+bind:
+  | bind_type = TYP; bind_name = IDENT;
+  {{ bind_type; bind_name; initial_value = None }}
 
 vdecl:
   | t = TYP; i = IDENT; SEMICOLON
@@ -100,3 +105,5 @@ expr:
     {Binop ({binop_type = Leq; binop_left = e1; binop_right = e2}:binop_expr)}
   | e1 = expr; GEQ; e2 = expr;
     {Binop ({binop_type = Geq; binop_left = e1; binop_right = e2}:binop_expr)}
+  | callee = IDENT; LPAREN; args = separated_list(COMMA, expr); RPAREN
+    {Call ({callee; args}: call_expr)}

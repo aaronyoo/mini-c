@@ -55,3 +55,11 @@ Iteration 7:
   ✔ Add the optional else block to if statements. @done(20-06-11 22:21)
   ✔ Add support for block statements. @done(20-06-11 22:21)
   ✔ Fix bug that causes opposite branching in condition logic. @done(20-06-09 18:11)
+
+Iteration 8:
+  *Add function calls and function declarations.*
+  ✔ Add function call expression to parser and AST. @done(20-06-15 16:51)
+  ✔ Add noarg call expression to typechecker. @done(20-06-15 16:51)
+  ✔ Add noarg call expression to code generator. @done(20-06-15 16:52)
+  ☐ Allow call expressions with arguments in the typechecker.
+  ☐ Allow call expressions with arguments in the code generator.

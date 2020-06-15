@@ -1,13 +1,11 @@
 int main()
 {
-  int i = 0;
-  if (i > 5)
-  {
-    i = 10;
-  }
-  else
-  {
-    i = 2;
-  }
-  return i;
+  int a = 3;
+  int b = 3;
+  return add(a, b);
+}
+
+int add(int x, int y)
+{
+  return x + y;
 }

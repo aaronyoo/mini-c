@@ -48,6 +48,7 @@ let rec gen_expr (expr: aexpr) (env: env) =
   (* Discard the lval pointer because we are not writing. *)
   | TLval l -> fst (gen_lval l env)
   | TBinop b -> gen_binop b env
+  | TCall c -> gen_call c env
 
 and gen_binop (bexpr: tbinop_expr) (env: env) =
   let left = gen_expr bexpr.tbinop_left env in
@@ -83,6 +84,14 @@ and gen_binop (bexpr: tbinop_expr) (env: env) =
     )
   | _ -> failwith ("unimplemented gen_binop: \n" ^
                    (show_tbinop_expr bexpr))
+
+and gen_call (tcall_expr: tcall_expr) (env: env) =
+  let evaluated_args = List.map tcall_expr.targs ~f: (fun targ -> gen_expr targ env) in
+  let callee = match lookup_function tcall_expr.tcallee the_module with
+    | Some c -> c
+    | None -> raise (Error ("unknown function referenced: " ^ tcall_expr.tcallee))
+  in
+  build_call callee (Array.of_list evaluated_args) "" builder
 
 let gen_assign_stmt (assign_stmt: tassign_stmt) (env: env) =
   let lval = match assign_stmt.tassign_left.expr with
@@ -149,14 +158,29 @@ and gen_stmt (stmt: tstmt) (env: env) =
   | TIf if_stmt -> gen_if_stmt if_stmt env
   | TBlock block_stmt -> gen_block_stmt block_stmt env
 
-let gen_func_decl (tfunc: tfunc) (env: env) =
-  (* For now, there are no arguments. *)
-  let ft = match tfunc.ret_typ with
-    | TyInt -> function_type i64_type (Array.create ~len: 0 i64_type)
-    | TyBool -> function_type i1_type (Array.create ~len: 0 i64_type)
+(** Generates an Array of parameter types. *)
+let gen_param_types (params: tbind list) =
+  let param_types = List.map params ~f: (fun tbind ->
+      trans_asttyp tbind.bind_type)
   in
-  (* Declare the function in the module. *)
-  let the_function = declare_function tfunc.name ft the_module in
+  Array.of_list param_types
+
+(** Generates a prototype for a function. This can be retrieved later from the
+    module when the actual function is populated. Here, its particularly used to
+    predeclare all the functions so that there is not need for forward
+    declarations. *)
+let gen_proto (tfunc: tfunc) =
+  let param_typ = gen_param_types tfunc.params in
+  let ret_typ = trans_asttyp tfunc.ret_typ in
+  let ft = function_type ret_typ param_typ in
+  ignore(declare_function tfunc.name ft the_module)
+
+let gen_func_decl (tfunc: tfunc) (env: env) =
+  (* Get the function from the module table. It should already exist. *)
+  let the_function = match lookup_function tfunc.name the_module with
+    | Some f -> f
+    | None -> raise (Error ("Function not declared: " ^ tfunc.name))
+  in
 
   (* Declare and entry basic block. *)
   let bb = append_block context "entry" the_function in
@@ -173,6 +197,27 @@ let gen_func_decl (tfunc: tfunc) (env: env) =
       in
       let var_names = Map.set env.var_names ~key: bind.bind_name ~data: var in
       { var_names })
+  in
+
+  (* Introduce the arguments into the environment. We also push the arguments to
+     the stack. This is essentially the equivalent of spilling everything to the
+     stack but the LLVM optimizing backend allows us not to worry about allows
+     LLVM to promote to registers. *)
+  let env = match List.fold2 (Array.to_list (params the_function)) (tfunc.params)
+                    ~init: env
+                    ~f:(fun env ll_p ty_p ->
+                        (* Create space on the stack and move the argument into
+                           that space. Then use this value as the argument for the
+                           rest of the function. *)
+                        let p = build_alloca (trans_asttyp ty_p.bind_type) (ty_p.bind_name) builder in
+                        ignore(build_store ll_p p builder);
+                        set_value_name ty_p.bind_name p;
+                        let var_names = Map.set env.var_names ~key: ty_p.bind_name ~data: p in
+                        { var_names }
+                      )
+    with
+    | Ok env -> env
+    | Unequal_lengths -> failwith "unreachable"
   in
 
   (* Generate the body of the function. *)
@@ -196,6 +241,11 @@ let gen_program (tprog: tprog) =
           | `Ok m -> m
           | `Duplicate -> failwith ("duplicate global name -- " ^ decl.bind_name))
   in
-  (* The environment to each function should include all globals *)
+  (* The environment to each function should include all globals. *)
   let env = { var_names = global_vars } in
+  (* In order to remove the need for forward declarations, we can automatically
+     predeclare each local function. This puts all functions in the module table
+     to be looked up later in something like a call instruction. *)
+  List.iter tprog.func_decls ~f: (fun tfunc -> gen_proto tfunc);
+  (* Create all the function declarations. *)
   List.iter tprog.func_decls ~f: (fun tfunc -> ignore(gen_func_decl tfunc env))

@@ -14,22 +14,28 @@ type op = Add
         | Geq
 [@@deriving show]
 
-type ident_expr = {
+type expr =
+  | IntLit of int
+  | BoolLit of bool
+  | Ident of ident_expr
+  | Binop of binop_expr
+  | Call of call_expr
+[@@deriving show]
+
+and ident_expr = {
   literal: string
 } [@@deriving show]
 
-type binop_expr = {
+and binop_expr = {
   binop_type: op;
   binop_left: expr;
   binop_right: expr;
 } [@@deriving show]
 
-and expr =
-  | IntLit of int
-  | BoolLit of bool
-  | Ident of ident_expr
-  | Binop of binop_expr
-[@@deriving show]
+and call_expr = {
+  callee: string;
+  args: expr list;
+} [@@deriving show]
 
 type bind = {
   bind_type: typ;
@@ -51,7 +57,7 @@ type if_stmt = {
 
 and block_stmt = {
   block_body: stmt list;
-}
+} [@@deriving show]
 
 and stmt =
   | Return of expr
@@ -63,6 +69,7 @@ and stmt =
 type func = {
   ret_typ: typ;
   name: string;
+  params: bind list;
   locals: bind list;
   body: stmt list;
 } [@@deriving show]

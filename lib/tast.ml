@@ -1,68 +1,56 @@
+open Ast
+
+module TLval = struct
+  type t = | TIdent of string
+end
+
+module TBind = struct
+  type t = {
+    name: string;
+    typ: Typ.t;
+  } [@@deriving show]
+end
+
 (* Annotated expressions. *)
-type aexpr = { typ: Ast.typ; expr: texpr } [@@deriving show]
+module rec AExpr: sig
+  type t = {
+    typ: Typ.t;
+    expr: TExpr.t
+  } [@@deriving show]
+end = AExpr
 
-and tbinop_expr = {
-  binop_type: Ast.op;
-  tbinop_left: aexpr;
-  tbinop_right: aexpr;
-} [@@deriving show]
+and TExpr: sig
+  type t =   | TIntLit of int
+             | TBoolLit of bool
+             | TLval of TLval.t
+             | TBinop of AExpr.t * Op.t * AExpr.t
+             | TCall of string * AExpr.t list
+  [@@deriving show]
+end = TExpr
 
-and tcall_expr = {
-  tcallee: string;
-  targs: aexpr list;
-} [@@deriving show]
+module TStmt = struct
+  type t =
+    | TReturn of AExpr.t
+    | TAssign of AExpr.t * AExpr.t
+    | TIf of AExpr.t * t * t
+    | TBlock of t list
+    | TFor of t * AExpr.t * t * t
+    | TBind of TBind.t
+  [@@deriving show]
+end
 
-and texpr =
-  | TIntLit of int
-  | TBoolLit of bool
-  | TLval of tlval
-  | TBinop of tbinop_expr
-  | TCall of tcall_expr
-[@@deriving show]
+module TFunc = struct
+  type t = {
+    typ: Typ.t;
+    name: string;
+    params: TBind.t list;
+    body: TStmt.t list;
+  }
+  [@@deriving show]
+end
 
-and tlval =
-  | TIdent of Ast.ident_expr
-[@@deriving show]
-
-type tstmt =
-  | TReturn of aexpr
-  | TAssign of tassign_stmt
-  | TIf of tif_stmt
-  | TBlock of tblock_stmt
-[@@deriving show]
-
-and tassign_stmt = {
-  tassign_left: aexpr;
-  tassign_right: aexpr;
-} [@@deriving show]
-
-and tif_stmt = {
-  cond: aexpr;
-  then_br: tstmt;
-  else_br: tstmt;
-} [@@deriving show]
-
-and tblock_stmt = {
-  tblock_body: tstmt list;
-} [@@deriving show]
-
-type tbind = {
-  bind_name: string;
-  bind_type: Ast.typ;
-  initial_value: aexpr option;
-} [@@deriving show]
-
-(* Functions are the same as the untyped AST except they have typed bodies. *)
-type tfunc = {
-  ret_typ: Ast.typ;
-  name: string;
-  params: tbind list;
-  locals: tbind list;
-  body: tstmt list;
-}
-[@@deriving show]
-
-type tprog = {
-  var_decls: tbind list;
-  func_decls: tfunc list;
-} [@@deriving show]
+module TProgram = struct
+  type t = {
+    func_decls: TFunc.t list;
+  } [@@deriving show]
+end

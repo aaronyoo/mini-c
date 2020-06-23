@@ -51,6 +51,7 @@ rule read =
   | "false"   { BOOL false }
   | "if"      { IF }
   | "else"    { ELSE }
+  | "for"     { FOR }
 
   (* Types. *)
   | "int"     { TYP TyInt }

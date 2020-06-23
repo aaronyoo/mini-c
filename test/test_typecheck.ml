@@ -8,7 +8,7 @@ let%expect_test "iteration_1" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -29,7 +29,7 @@ let%expect_test "iteration_2" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -60,7 +60,7 @@ let%expect_test "iteration_3" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -100,7 +100,7 @@ let%expect_test "iteration_3" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -208,7 +208,7 @@ let%expect_test "iteration 6 (booleans and more operators)" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -395,7 +395,7 @@ let%expect_test "iteration 7 (if statements)" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -494,7 +494,7 @@ let%expect_test "iteration 8 (no argument function calls)" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];
@@ -536,7 +536,7 @@ let%expect_test "iteration 8 (function call with arguments)" =
     }
   |} in
   let typed_prog = Minicc.Typecheck.check_program program in
-  let s = Minicc.Tast.show_tprog typed_prog in
+  let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
     { Tast.var_decls = [];

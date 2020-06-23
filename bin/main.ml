@@ -19,7 +19,6 @@ let parse filename =
   let program = parse_with_error lexbuf in
   try
     let typed_prog = Minicc.Typecheck.check_program program in
-    Printf.printf "%s\n\n" (Minicc.Tast.show_tprog typed_prog);
     Minicc.Codegen.gen_program typed_prog;
     Llvm.dump_module Minicc.Codegen.the_module;
     ignore(Llvm_bitwriter.write_bitcode_file Minicc.Codegen.the_module "/tmp/test.bc");

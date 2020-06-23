@@ -61,5 +61,17 @@ Iteration 8:
   ✔ Add function call expression to parser and AST. @done(20-06-15 16:51)
   ✔ Add noarg call expression to typechecker. @done(20-06-15 16:51)
   ✔ Add noarg call expression to code generator. @done(20-06-15 16:52)
-  ☐ Allow call expressions with arguments in the typechecker.
-  ☐ Allow call expressions with arguments in the code generator.
+  ✔ Allow call expressions with arguments in the typechecker. @done(20-06-23 10:04)
+  ✔ Allow call expressions with arguments in the code generator. @done(20-06-23 10:05)
+
+Iteration 9:
+  *Add for loop support.*
+  ✔ Add for loops to the parser. @done(20-06-23 10:05)
+  ✔ Add for loops to the typechecker and codegen. @done(20-06-23 10:05)
+  ✔ Get block scoping to work. @done(20-06-23 10:05)
+
+Iteration 10:
+  *Allow direct variable declarations without a prebinding.*
+  ☐ Add varaible declarations to the parser.
+  ☐ Add varaible declarations to the typchecker (desugar?).
+  ☐ Add varaible declarations to the code generator.

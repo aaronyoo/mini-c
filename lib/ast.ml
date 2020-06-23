@@ -1,80 +1,63 @@
-type typ = TyInt
+module Typ = struct
+  type t = TyInt
          | TyBool
-[@@deriving show]
+  [@@deriving show]
+end
 
-type op = Add
-        | Sub
-        | Mul
-        | Div
-        | Eq
-        | Neq
-        | Less
-        | Greater
-        | Leq
-        | Geq
-[@@deriving show]
+module Op = struct
+  type t = Add
+         | Sub
+         | Mul
+         | Div
+         | Eq
+         | Neq
+         | Less
+         | Greater
+         | Leq
+         | Geq
+  [@@deriving show]
+end
 
-type expr =
-  | IntLit of int
-  | BoolLit of bool
-  | Ident of ident_expr
-  | Binop of binop_expr
-  | Call of call_expr
-[@@deriving show]
+module Expr = struct
+  type t =
+    | IntLit of int
+    | BoolLit of bool
+    | Ident of string
+    | Binop of t * Op.t * t
+    | Call of string * t list
+  [@@deriving show]
+end
 
-and ident_expr = {
-  literal: string
-} [@@deriving show]
+module Bind = struct
+  type t = {
+    typ: Typ.t;
+    name: string;
+  }
+  [@@deriving show]
+end
 
-and binop_expr = {
-  binop_type: op;
-  binop_left: expr;
-  binop_right: expr;
-} [@@deriving show]
+module Stmt = struct
+  type t =
+    | Return of Expr.t
+    | Assign of Expr.t * Expr.t
+    | If of Expr.t * t * t
+    | Block of t list
+    | For of t * Expr.t * t * t
+    | Bind of Bind.t
+  [@@deriving show]
+end
 
-and call_expr = {
-  callee: string;
-  args: expr list;
-} [@@deriving show]
+module Func = struct
+  type t = {
+    typ: Typ.t;
+    name: string;
+    params: Bind.t list;
+    body: Stmt.t list;
+  } [@@deriving show]
+end
 
-type bind = {
-  bind_type: typ;
-  bind_name: string;
-  initial_value: expr option;
-}
-[@@deriving show]
-
-type assign_stmt = {
-  assign_left: expr;
-  assign_right: expr;
-} [@@deriving show]
-
-type if_stmt = {
-  cond: expr;
-  then_br: stmt;
-  else_br: stmt;
-} [@@deriving show]
-
-and block_stmt = {
-  block_body: stmt list;
-} [@@deriving show]
-
-and stmt =
-  | Return of expr
-  | Assign of assign_stmt
-  | If of if_stmt
-  | Block of block_stmt
-[@@deriving show]
-
-type func = {
-  ret_typ: typ;
-  name: string;
-  params: bind list;
-  locals: bind list;
-  body: stmt list;
-} [@@deriving show]
-
-type program = {
-  var_decls: bind list;
-  func_decls: func list;
-} [@@deriving show]
+module Program = struct
+  type t = {
+    func_decls: Func.t list;
+  } [@@deriving show]
+end

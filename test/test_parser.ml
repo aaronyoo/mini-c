@@ -7,7 +7,7 @@ let%expect_test "iteration_1" =
       return 0;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -26,7 +26,7 @@ let%expect_test "iteration_2" =
       return i;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -50,7 +50,7 @@ let%expect_test "iteration_3" =
       return i;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -82,7 +82,7 @@ let%expect_test "iteration_5" =
       return i;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect{|
     { Ast.var_decls = [];
@@ -138,7 +138,7 @@ let%expect_test "operator precedence" =
       return i;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -181,7 +181,7 @@ let%expect_test "iteration 6 (booleans and more operators)" =
       return j;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -278,7 +278,7 @@ let%expect_test "iteration 7 (if statements)" =
       return i;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -347,7 +347,7 @@ let%expect_test "iteration 8 (no argument function calls)" =
       return 5;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];
@@ -380,7 +380,7 @@ let%expect_test "iteration 8 (function call with argument)" =
       return x + y;
     }
   |} in
-  let s = Minicc.Ast.show_program program in
+  let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
     { Ast.var_decls = [];

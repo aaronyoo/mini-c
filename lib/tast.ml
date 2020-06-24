@@ -2,6 +2,7 @@ open Ast
 
 module TLval = struct
   type t = | TIdent of string
+  [@@deriving show]
 end
 
 module TBind = struct
@@ -17,7 +18,12 @@ module rec AExpr: sig
     typ: Typ.t;
     expr: TExpr.t
   } [@@deriving show]
-end = AExpr
+end = struct
+  type t = {
+    typ: Typ.t;
+    expr: TExpr.t
+  } [@@deriving show]
+end
 
 and TExpr: sig
   type t =   | TIntLit of int
@@ -26,7 +32,14 @@ and TExpr: sig
              | TBinop of AExpr.t * Op.t * AExpr.t
              | TCall of string * AExpr.t list
   [@@deriving show]
-end = TExpr
+end = struct
+  type t =   | TIntLit of int
+             | TBoolLit of bool
+             | TLval of TLval.t
+             | TBinop of AExpr.t * Op.t * AExpr.t
+             | TCall of string * AExpr.t list
+  [@@deriving show]
+end
 
 module TStmt = struct
   type t =
@@ -36,6 +49,7 @@ module TStmt = struct
     | TBlock of t list
     | TFor of t * AExpr.t * t * t
     | TBind of TBind.t
+    | TVarDecl of TBind.t * AExpr.t
   [@@deriving show]
 end
 

@@ -11,11 +11,13 @@ let%expect_test "iteration_1" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = []; locals = [];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Tast.TReturn { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) })] }
+         [(Tast.TStmt.TReturn
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 0) })
+           ]
+         }
         ]
       }
   |}]
@@ -32,18 +34,14 @@ let%expect_test "iteration_2" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
-            initial_value =
-            (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) }) }
-           ];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Tast.TReturn
-             { Tast.typ = Ast.TyInt;
-               expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) })
+         [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "i"; typ = Ast.Typ.TyInt },
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 0) }));
+           (Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) })
            ]
          }
         ]
@@ -63,24 +61,18 @@ let%expect_test "iteration_3" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
-            initial_value =
-            (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 90) }) }
-           ];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Tast.TAssign
-             { Tast.tassign_left =
-               { Tast.typ = Ast.TyInt;
-                 expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-               tassign_right = { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) }
-               });
-           (Tast.TReturn
-              { Tast.typ = Ast.TyInt;
-                expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) })
+         [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "i"; typ = Ast.Typ.TyInt },
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 90) }));
+           (Tast.TStmt.TAssign (
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+              { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 0) }));
+           (Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) })
            ]
          }
         ]
@@ -103,85 +95,70 @@ let%expect_test "iteration_3" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
-            initial_value =
-            (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) }) }
-           ];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Tast.TAssign
-             { Tast.tassign_left =
-               { Tast.typ = Ast.TyInt;
-                 expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-               tassign_right =
-               { Tast.typ = Ast.TyInt;
-                 expr =
-                 (Tast.TBinop
-                    { Tast.binop_type = Ast.Add;
-                      tbinop_left =
-                      { Tast.typ = Ast.TyInt;
-                        expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                      tbinop_right =
-                      { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) } })
-                 }
-               });
-           (Tast.TAssign
-              { Tast.tassign_left =
-                { Tast.typ = Ast.TyInt;
-                  expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                tassign_right =
-                { Tast.typ = Ast.TyInt;
-                  expr =
-                  (Tast.TBinop
-                     { Tast.binop_type = Ast.Sub;
-                       tbinop_left =
-                       { Tast.typ = Ast.TyInt;
-                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" }))
-                         };
-                       tbinop_right =
-                       { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 1) } })
-                  }
-                });
-           (Tast.TAssign
-              { Tast.tassign_left =
-                { Tast.typ = Ast.TyInt;
-                  expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                tassign_right =
-                { Tast.typ = Ast.TyInt;
-                  expr =
-                  (Tast.TBinop
-                     { Tast.binop_type = Ast.Div;
-                       tbinop_left =
-                       { Tast.typ = Ast.TyInt;
-                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" }))
-                         };
-                       tbinop_right =
-                       { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 2) } })
-                  }
-                });
-           (Tast.TAssign
-              { Tast.tassign_left =
-                { Tast.typ = Ast.TyInt;
-                  expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                tassign_right =
-                { Tast.typ = Ast.TyInt;
-                  expr =
-                  (Tast.TBinop
-                     { Tast.binop_type = Ast.Mul;
-                       tbinop_left =
-                       { Tast.typ = Ast.TyInt;
-                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" }))
-                         };
-                       tbinop_right =
-                       { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 4) } })
-                  }
-                });
-           (Tast.TReturn
-              { Tast.typ = Ast.TyInt;
-                expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) })
+         [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "i"; typ = Ast.Typ.TyInt },
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 0) }));
+           (Tast.TStmt.TAssign (
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Add,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 3) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TAssign (
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Sub,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 1) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TAssign (
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Div,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 2) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TAssign (
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Mul,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 4) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) })
            ]
          }
         ]
@@ -211,163 +188,120 @@ let%expect_test "iteration 6 (booleans and more operators)" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
-            initial_value =
-            (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 2) }) };
-           { Tast.bind_name = "j"; bind_type = Ast.TyInt;
-             initial_value =
-             (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) }) };
-           { Tast.bind_name = "a"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Eq;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "b"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Less;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "c"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Greater;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "d"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Leq;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "e"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Geq;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "f"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Neq;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "x"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool; expr = (Tast.TBoolLit true) }) };
-           { Tast.bind_name = "y"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool; expr = (Tast.TBoolLit false) }) };
-           { Tast.bind_name = "g"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Eq;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyBool;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "x" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyBool;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "y" })) }
-                          })
-                     })
-             };
-           { Tast.bind_name = "h"; bind_type = Ast.TyBool;
-             initial_value =
-             (Some { Tast.typ = Ast.TyBool;
-                     expr =
-                     (Tast.TBinop
-                        { Tast.binop_type = Ast.Neq;
-                          tbinop_left =
-                          { Tast.typ = Ast.TyBool;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "x" })) };
-                          tbinop_right =
-                          { Tast.typ = Ast.TyBool;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "y" })) }
-                          })
-                     })
-             }
-           ];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Tast.TReturn
-             { Tast.typ = Ast.TyInt;
-               expr = (Tast.TLval (Tast.TIdent { Ast.literal = "j" })) })
+         [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "i"; typ = Ast.Typ.TyInt },
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 2) }));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "j"; typ = Ast.Typ.TyInt },
+              { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 0) }));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "a"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Eq,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "b"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Less,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "c"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Greater,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "d"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Leq,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "e"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Geq,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "f"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Neq,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "x"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr = (Tast.TExpr.TBoolLit true) }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "y"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr = (Tast.TExpr.TBoolLit false) }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "g"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyBool;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "x")) },
+                   Ast.Op.Eq,
+                   { Tast.AExpr.typ = Ast.Typ.TyBool;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "y")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "h"; typ = Ast.Typ.TyBool },
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyBool;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "x")) },
+                   Ast.Op.Neq,
+                   { Tast.AExpr.typ = Ast.Typ.TyBool;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "y")) }
+                   ))
+                }
+              ));
+           (Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "j")) })
            ]
          }
         ]
@@ -398,81 +332,62 @@ let%expect_test "iteration 7 (if statements)" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Tast.bind_name = "i"; bind_type = Ast.TyInt;
-            initial_value =
-            (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 0) }) }
-           ];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Tast.TIf
-             { Tast.cond =
-               { Tast.typ = Ast.TyBool;
-                 expr =
-                 (Tast.TBinop
-                    { Tast.binop_type = Ast.Greater;
-                      tbinop_left =
-                      { Tast.typ = Ast.TyInt;
-                        expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                      tbinop_right =
-                      { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) } })
-                 };
-               then_br =
-               (Tast.TBlock
-                  { Tast.tblock_body =
-                    [(Tast.TAssign
-                        { Tast.tassign_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tassign_right =
-                          { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 10) } })
-                      ]
-                    });
-               else_br =
-               (Tast.TBlock
-                  { Tast.tblock_body =
-                    [(Tast.TAssign
-                        { Tast.tassign_left =
-                          { Tast.typ = Ast.TyInt;
-                            expr =
-                            (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                          tassign_right =
-                          { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 2) } })
-                      ]
-                    })
-               });
-           (Tast.TIf
-              { Tast.cond =
-                { Tast.typ = Ast.TyBool;
-                  expr =
-                  (Tast.TBinop
-                     { Tast.binop_type = Ast.Greater;
-                       tbinop_left =
-                       { Tast.typ = Ast.TyInt;
-                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" }))
-                         };
-                       tbinop_right =
-                       { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) } })
-                  };
-                then_br =
-                (Tast.TBlock
-                   { Tast.tblock_body =
-                     [(Tast.TAssign
-                         { Tast.tassign_left =
-                           { Tast.typ = Ast.TyInt;
-                             expr =
-                             (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) };
-                           tassign_right =
-                           { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) } })
-                       ]
-                     });
-                else_br = (Tast.TBlock { Tast.tblock_body = [] }) });
-           (Tast.TReturn
-              { Tast.typ = Ast.TyInt;
-                expr = (Tast.TLval (Tast.TIdent { Ast.literal = "i" })) })
+         [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "i"; typ = Ast.Typ.TyInt },
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 0) }));
+           (Tast.TStmt.TIf (
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Greater,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 5) }
+                   ))
+                },
+              (Tast.TStmt.TBlock
+                 [(Tast.TStmt.TAssign (
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TIntLit 10) }
+                     ))
+                   ]),
+              (Tast.TStmt.TBlock
+                 [(Tast.TStmt.TAssign (
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TIntLit 2) }
+                     ))
+                   ])
+              ));
+           (Tast.TStmt.TIf (
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
+                expr =
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                   Ast.Op.Greater,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 5) }
+                   ))
+                },
+              (Tast.TStmt.TBlock
+                 [(Tast.TStmt.TAssign (
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) },
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TIntLit 5) }
+                     ))
+                   ]),
+              (Tast.TStmt.TBlock [])));
+           (Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "i")) })
            ]
          }
         ]
@@ -497,24 +412,23 @@ let%expect_test "iteration 8 (no argument function calls)" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "add"; params = []; locals = [];
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "add"; params = [];
          body =
-         [(Tast.TReturn { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 5) })] };
-        { Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-          locals =
-          [{ Tast.bind_name = "a"; bind_type = Ast.TyInt;
-             initial_value =
-             (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 2) }) };
-            { Tast.bind_name = "b"; bind_type = Ast.TyInt;
-              initial_value =
-              (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) }) }
-            ];
+         [(Tast.TStmt.TReturn
+             { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 5) })
+           ]
+         };
+        { Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
           body =
-          [(Tast.TReturn
-              { Tast.typ = Ast.TyInt;
-                expr = (Tast.TCall { Tast.tcallee = "add"; targs = [] }) })
+          [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "a"; typ = Ast.Typ.TyInt },
+              { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 2) }));
+            (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "b"; typ = Ast.Typ.TyInt },
+               { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 3) }
+               ));
+            (Tast.TStmt.TReturn
+               { Tast.AExpr.typ = Ast.Typ.TyInt;
+                 expr = (Tast.TExpr.TCall ("add", [])) })
             ]
           }
         ]
@@ -539,52 +453,146 @@ let%expect_test "iteration 8 (function call with arguments)" =
   let s = Minicc.Tast.TProgram.show typed_prog in
   printf "%s" s;
   [%expect {|
-    { Tast.var_decls = [];
-      func_decls =
-      [{ Tast.ret_typ = Ast.TyInt; name = "add";
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "add";
          params =
-         [{ Tast.bind_name = "x"; bind_type = Ast.TyInt; initial_value = None };
-           { Tast.bind_name = "y"; bind_type = Ast.TyInt; initial_value = None }];
-         locals = [];
+         [{ Tast.TBind.name = "x"; typ = Ast.Typ.TyInt };
+           { Tast.TBind.name = "y"; typ = Ast.Typ.TyInt }];
          body =
-         [(Tast.TReturn
-             { Tast.typ = Ast.TyInt;
+         [(Tast.TStmt.TReturn
+             { Tast.AExpr.typ = Ast.Typ.TyInt;
                expr =
-               (Tast.TBinop
-                  { Tast.binop_type = Ast.Add;
-                    tbinop_left =
-                    { Tast.typ = Ast.TyInt;
-                      expr = (Tast.TLval (Tast.TIdent { Ast.literal = "x" })) };
-                    tbinop_right =
-                    { Tast.typ = Ast.TyInt;
-                      expr = (Tast.TLval (Tast.TIdent { Ast.literal = "y" })) }
-                    })
+               (Tast.TExpr.TBinop (
+                  { Tast.AExpr.typ = Ast.Typ.TyInt;
+                    expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "x")) },
+                  Ast.Op.Add,
+                  { Tast.AExpr.typ = Ast.Typ.TyInt;
+                    expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "y")) }
+                  ))
                })
            ]
          };
-        { Tast.ret_typ = Ast.TyInt; name = "main"; params = [];
-          locals =
-          [{ Tast.bind_name = "a"; bind_type = Ast.TyInt;
-             initial_value =
-             (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) }) };
-            { Tast.bind_name = "b"; bind_type = Ast.TyInt;
-              initial_value =
-              (Some { Tast.typ = Ast.TyInt; expr = (Tast.TIntLit 3) }) }
-            ];
+        { Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
           body =
-          [(Tast.TReturn
-              { Tast.typ = Ast.TyInt;
+          [(Tast.TStmt.TVarDecl ({ Tast.TBind.name = "a"; typ = Ast.Typ.TyInt },
+              { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 3) }));
+            (Tast.TStmt.TVarDecl ({ Tast.TBind.name = "b"; typ = Ast.Typ.TyInt },
+               { Tast.AExpr.typ = Ast.Typ.TyInt; expr = (Tast.TExpr.TIntLit 3) }
+               ));
+            (Tast.TStmt.TReturn
+               { Tast.AExpr.typ = Ast.Typ.TyInt;
+                 expr =
+                 (Tast.TExpr.TCall ("add",
+                    [{ Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "a")) };
+                      { Tast.AExpr.typ = Ast.Typ.TyInt;
+                        expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "b")) }
+                      ]
+                    ))
+                 })
+            ]
+          }
+        ]
+      }
+  |}]
+
+let%expect_test "factorial" =
+  let program = Helper.parse {|
+    int main()
+    {
+      return factorial(5);
+    }
+
+    int factorial(int n)
+    {
+      int ret;
+      if (n == 0)
+      {
+        ret = 1;
+      }
+      else
+      {
+        ret = n * factorial(n - 1);
+      }
+      return ret;
+    }
+  |} in
+  let typed_prog = Minicc.Typecheck.check_program program in
+  let s = Minicc.Tast.TProgram.show typed_prog in
+  printf "%s" s;
+  [%expect {|
+    { Tast.TProgram.func_decls =
+      [{ Tast.TFunc.typ = Ast.Typ.TyInt; name = "factorial";
+         params = [{ Tast.TBind.name = "n"; typ = Ast.Typ.TyInt }];
+         body =
+         [(Tast.TStmt.TBind { Tast.TBind.name = "ret"; typ = Ast.Typ.TyInt });
+           (Tast.TStmt.TIf (
+              { Tast.AExpr.typ = Ast.Typ.TyBool;
                 expr =
-                (Tast.TCall
-                   { Tast.tcallee = "add";
-                     targs =
-                     [{ Tast.typ = Ast.TyInt;
-                        expr = (Tast.TLval (Tast.TIdent { Ast.literal = "a" })) };
-                       { Tast.typ = Ast.TyInt;
-                         expr = (Tast.TLval (Tast.TIdent { Ast.literal = "b" }))
-                         }
-                       ]
-                     })
+                (Tast.TExpr.TBinop (
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "n")) },
+                   Ast.Op.Eq,
+                   { Tast.AExpr.typ = Ast.Typ.TyInt;
+                     expr = (Tast.TExpr.TIntLit 0) }
+                   ))
+                },
+              (Tast.TStmt.TBlock
+                 [(Tast.TStmt.TAssign (
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "ret")) },
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TIntLit 1) }
+                     ))
+                   ]),
+              (Tast.TStmt.TBlock
+                 [(Tast.TStmt.TAssign (
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "ret")) },
+                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                       expr =
+                       (Tast.TExpr.TBinop (
+                          { Tast.AExpr.typ = Ast.Typ.TyInt;
+                            expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "n")) },
+                          Ast.Op.Mul,
+                          { Tast.AExpr.typ = Ast.Typ.TyInt;
+                            expr =
+                            (Tast.TExpr.TCall ("factorial",
+                               [{ Tast.AExpr.typ = Ast.Typ.TyInt;
+                                  expr =
+                                  (Tast.TExpr.TBinop (
+                                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                                       expr =
+                                       (Tast.TExpr.TLval (Tast.TLval.TIdent "n"))
+                                       },
+                                     Ast.Op.Sub,
+                                     { Tast.AExpr.typ = Ast.Typ.TyInt;
+                                       expr = (Tast.TExpr.TIntLit 1) }
+                                     ))
+                                  }
+                                 ]
+                               ))
+                            }
+                          ))
+                       }
+                     ))
+                   ])
+              ));
+           (Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr = (Tast.TExpr.TLval (Tast.TLval.TIdent "ret")) })
+           ]
+         };
+        { Tast.TFunc.typ = Ast.Typ.TyInt; name = "main"; params = [];
+          body =
+          [(Tast.TStmt.TReturn
+              { Tast.AExpr.typ = Ast.Typ.TyInt;
+                expr =
+                (Tast.TExpr.TCall ("factorial",
+                   [{ Tast.AExpr.typ = Ast.Typ.TyInt;
+                      expr = (Tast.TExpr.TIntLit 5) }
+                     ]
+                   ))
                 })
             ]
           }

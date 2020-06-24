@@ -101,45 +101,29 @@ and gen_stmt (stmt: TStmt.t) (env: env): env * llvalue =
     let right = gen_expr rhs env in
     env, build_store right left_ptr builder
   | TIf (cond, t, f) ->
-    (* Emit condition check into current block. *)
-    let cond = gen_expr cond env in
-    let one = const_int i1_type 1 in
-    let cond_val = build_icmp Icmp.Eq cond one "ifcond" builder in
-
     let start_bb = insertion_block builder in
     let the_function = block_parent start_bb in
     let then_bb = append_block context "then" the_function in
     let else_bb = append_block context "else" the_function in
+    let end_bb = append_block context "end" the_function in
+
+    (* Emit condition check into current block. *)
+    let cond = gen_expr cond env in
+    let one = const_int i1_type 1 in
+    let cond_val = build_icmp Icmp.Eq cond one "ifcond" builder in
+    ignore(build_cond_br cond_val then_bb else_bb builder);
 
     (* Emit then block. *)
     position_at_end then_bb builder;
     let then_val = gen_stmt t env in
-
-    (* Generating the then block can dirty the builder. *)
-    let new_then_bb = insertion_block builder in
+    ignore(build_br end_bb builder);
 
     (* Emit else block. *)
     position_at_end else_bb builder;
     let else_val = gen_stmt f env in
-    let new_else_bb = insertion_block builder in
+    ignore(build_br end_bb builder);
 
-    (* Emit merge block. *)
-    let merge_bb = append_block context "ifcont" the_function in
-    position_at_end merge_bb builder;
-
-    (* Return to the start block to add conditional branch. *)
-    position_at_end start_bb builder;
-    ignore(build_cond_br cond_val then_bb else_bb builder);
-
-    (* Set unconditional branch at end of 'then' block. *)
-    position_at_end new_then_bb builder;
-    ignore(build_br merge_bb builder);
-
-    (* Set unconditional branch at end of 'else' block. *)
-    position_at_end new_else_bb builder;
-    ignore(build_br merge_bb builder);
-
-    position_at_end merge_bb builder;
+    position_at_end end_bb builder;
 
     ignore(then_val);
     (* Ignore the environment changes in the branches. *)
@@ -189,6 +173,10 @@ and gen_stmt (stmt: TStmt.t) (env: env): env * llvalue =
     let var = build_alloca (trans_asttyp tbind.typ) tbind.name builder in
     let vars = Map.set env.var_names ~key:tbind.name ~data:var in
     { var_names = vars; }, var
+  | TVarDecl (tbind, rhs) ->
+    let right = gen_expr rhs env in
+    let env, left_ptr = gen_stmt (TBind tbind) env in
+    env, build_store right left_ptr builder
 
 (** Generates an Array of parameter types. *)
 let gen_param_types (params: TBind.t list) =
@@ -243,6 +231,7 @@ let gen_func_decl (tfunc: TFunc.t) (env: env) =
 
   (* Generate the body of the function. *)
   ignore(List.fold tfunc.body ~init:env ~f:(fun env tstmt -> fst (gen_stmt tstmt env)));
+  (* Llvm.dump_module the_module; *)
   Llvm_analysis.assert_valid_function the_function;
   the_function
 

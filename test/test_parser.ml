@@ -10,10 +10,9 @@ let%expect_test "iteration_1" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = []; locals = [];
-         body = [(Ast.Return (Ast.IntLit 0))] }
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
+         body = [(Ast.Stmt.Return (Ast.Expr.IntLit 0))] }
         ]
       }
   |}]
@@ -29,14 +28,13 @@ let%expect_test "iteration_2" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
-            initial_value = (Some (Ast.IntLit 0)) }
-           ];
-         body = [(Ast.Return (Ast.Ident { Ast.literal = "i" }))] }
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
+         body =
+         [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "i" },
+             (Ast.Expr.IntLit 0)));
+           (Ast.Stmt.Return (Ast.Expr.Ident "i"))]
+         }
         ]
       }
   |}]
@@ -53,18 +51,13 @@ let%expect_test "iteration_3" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
-            initial_value = (Some (Ast.IntLit 90)) }
-           ];
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Ast.Assign
-             { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-               assign_right = (Ast.IntLit 0) });
-           (Ast.Return (Ast.Ident { Ast.literal = "i" }))]
+         [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "i" },
+             (Ast.Expr.IntLit 90)));
+           (Ast.Stmt.Assign ((Ast.Expr.Ident "i"), (Ast.Expr.IntLit 0)));
+           (Ast.Stmt.Return (Ast.Expr.Ident "i"))]
          }
         ]
       }
@@ -85,47 +78,28 @@ let%expect_test "iteration_5" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect{|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
-            initial_value = (Some (Ast.IntLit 0)) }
-           ];
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Ast.Assign
-             { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-               assign_right =
-               (Ast.Binop
-                  { Ast.binop_type = Ast.Add;
-                    binop_left = (Ast.Ident { Ast.literal = "i" });
-                    binop_right = (Ast.IntLit 3) })
-               });
-           (Ast.Assign
-              { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-                assign_right =
-                (Ast.Binop
-                   { Ast.binop_type = Ast.Sub;
-                     binop_left = (Ast.Ident { Ast.literal = "i" });
-                     binop_right = (Ast.IntLit 1) })
-                });
-           (Ast.Assign
-              { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-                assign_right =
-                (Ast.Binop
-                   { Ast.binop_type = Ast.Div;
-                     binop_left = (Ast.Ident { Ast.literal = "i" });
-                     binop_right = (Ast.IntLit 2) })
-                });
-           (Ast.Assign
-              { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-                assign_right =
-                (Ast.Binop
-                   { Ast.binop_type = Ast.Mul;
-                     binop_left = (Ast.Ident { Ast.literal = "i" });
-                     binop_right = (Ast.IntLit 4) })
-                });
-           (Ast.Return (Ast.Ident { Ast.literal = "i" }))]
+         [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "i" },
+             (Ast.Expr.IntLit 0)));
+           (Ast.Stmt.Assign ((Ast.Expr.Ident "i"),
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Add,
+                 (Ast.Expr.IntLit 3)))
+              ));
+           (Ast.Stmt.Assign ((Ast.Expr.Ident "i"),
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Sub,
+                 (Ast.Expr.IntLit 1)))
+              ));
+           (Ast.Stmt.Assign ((Ast.Expr.Ident "i"),
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Div,
+                 (Ast.Expr.IntLit 2)))
+              ));
+           (Ast.Stmt.Assign ((Ast.Expr.Ident "i"),
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Mul,
+                 (Ast.Expr.IntLit 4)))
+              ));
+           (Ast.Stmt.Return (Ast.Expr.Ident "i"))]
          }
         ]
       } |}]
@@ -141,23 +115,17 @@ let%expect_test "operator precedence" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
-            initial_value =
-            (Some (Ast.Binop
-                     { Ast.binop_type = Ast.Add; binop_left = (Ast.IntLit 3);
-                       binop_right =
-                       (Ast.Binop
-                          { Ast.binop_type = Ast.Mul;
-                            binop_left = (Ast.IntLit 1);
-                            binop_right = (Ast.IntLit 5) })
-                       }))
-            }
-           ];
-         body = [(Ast.Return (Ast.Ident { Ast.literal = "i" }))] }
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
+         body =
+         [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "i" },
+             (Ast.Expr.Binop ((Ast.Expr.IntLit 3), Ast.Op.Add,
+                (Ast.Expr.Binop ((Ast.Expr.IntLit 1), Ast.Op.Mul,
+                   (Ast.Expr.IntLit 5)))
+                ))
+             ));
+           (Ast.Stmt.Return (Ast.Expr.Ident "i"))]
+         }
         ]
       }
   |}]
@@ -184,76 +152,51 @@ let%expect_test "iteration 6 (booleans and more operators)" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
-            initial_value = (Some (Ast.IntLit 2)) };
-           { Ast.bind_type = Ast.TyInt; bind_name = "j";
-             initial_value = (Some (Ast.IntLit 0)) };
-           { Ast.bind_type = Ast.TyBool; bind_name = "a";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Eq;
-                        binop_left = (Ast.Ident { Ast.literal = "i" });
-                        binop_right = (Ast.Ident { Ast.literal = "j" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "b";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Less;
-                        binop_left = (Ast.Ident { Ast.literal = "i" });
-                        binop_right = (Ast.Ident { Ast.literal = "j" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "c";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Greater;
-                        binop_left = (Ast.Ident { Ast.literal = "i" });
-                        binop_right = (Ast.Ident { Ast.literal = "j" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "d";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Leq;
-                        binop_left = (Ast.Ident { Ast.literal = "i" });
-                        binop_right = (Ast.Ident { Ast.literal = "j" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "e";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Geq;
-                        binop_left = (Ast.Ident { Ast.literal = "i" });
-                        binop_right = (Ast.Ident { Ast.literal = "j" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "f";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Neq;
-                        binop_left = (Ast.Ident { Ast.literal = "i" });
-                        binop_right = (Ast.Ident { Ast.literal = "j" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "x";
-             initial_value = (Some (Ast.BoolLit true)) };
-           { Ast.bind_type = Ast.TyBool; bind_name = "y";
-             initial_value = (Some (Ast.BoolLit false)) };
-           { Ast.bind_type = Ast.TyBool; bind_name = "g";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Eq;
-                        binop_left = (Ast.Ident { Ast.literal = "x" });
-                        binop_right = (Ast.Ident { Ast.literal = "y" }) }))
-             };
-           { Ast.bind_type = Ast.TyBool; bind_name = "h";
-             initial_value =
-             (Some (Ast.Binop
-                      { Ast.binop_type = Ast.Neq;
-                        binop_left = (Ast.Ident { Ast.literal = "x" });
-                        binop_right = (Ast.Ident { Ast.literal = "y" }) }))
-             }
-           ];
-         body = [(Ast.Return (Ast.Ident { Ast.literal = "j" }))] }
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
+         body =
+         [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "i" },
+             (Ast.Expr.IntLit 2)));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "j" },
+              (Ast.Expr.IntLit 0)));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "a" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Eq,
+                 (Ast.Expr.Ident "j")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "b" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Less,
+                 (Ast.Expr.Ident "j")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "c" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Greater,
+                 (Ast.Expr.Ident "j")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "d" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Leq,
+                 (Ast.Expr.Ident "j")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "e" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Geq,
+                 (Ast.Expr.Ident "j")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "f" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Neq,
+                 (Ast.Expr.Ident "j")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "x" },
+              (Ast.Expr.BoolLit true)));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "y" },
+              (Ast.Expr.BoolLit false)));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "g" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "x"), Ast.Op.Eq,
+                 (Ast.Expr.Ident "y")))
+              ));
+           (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyBool; name = "h" },
+              (Ast.Expr.Binop ((Ast.Expr.Ident "x"), Ast.Op.Neq,
+                 (Ast.Expr.Ident "y")))
+              ));
+           (Ast.Stmt.Return (Ast.Expr.Ident "j"))]
+         }
         ]
       }
   |}]
@@ -281,53 +224,26 @@ let%expect_test "iteration 7 (if statements)" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-         locals =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "i";
-            initial_value = (Some (Ast.IntLit 0)) }
-           ];
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
          body =
-         [(Ast.If
-             { Ast.cond =
-               (Ast.Binop
-                  { Ast.binop_type = Ast.Greater;
-                    binop_left = (Ast.Ident { Ast.literal = "i" });
-                    binop_right = (Ast.IntLit 5) });
-               then_br =
-               (Ast.Block
-                  { Ast.block_body =
-                    [(Ast.Assign
-                        { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-                          assign_right = (Ast.IntLit 10) })
-                      ]
-                    });
-               else_br =
-               (Ast.Block
-                  { Ast.block_body =
-                    [(Ast.Assign
-                        { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-                          assign_right = (Ast.IntLit 2) })
-                      ]
-                    })
-               });
-           (Ast.If
-              { Ast.cond =
-                (Ast.Binop
-                   { Ast.binop_type = Ast.Greater;
-                     binop_left = (Ast.Ident { Ast.literal = "i" });
-                     binop_right = (Ast.IntLit 5) });
-                then_br =
-                (Ast.Block
-                   { Ast.block_body =
-                     [(Ast.Assign
-                         { Ast.assign_left = (Ast.Ident { Ast.literal = "i" });
-                           assign_right = (Ast.IntLit 5) })
-                       ]
-                     });
-                else_br = (Ast.Block { Ast.block_body = [] }) });
-           (Ast.Return (Ast.Ident { Ast.literal = "i" }))]
+         [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "i" },
+             (Ast.Expr.IntLit 0)));
+           (Ast.Stmt.If (
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Greater,
+                 (Ast.Expr.IntLit 5))),
+              (Ast.Stmt.Block
+                 [(Ast.Stmt.Assign ((Ast.Expr.Ident "i"), (Ast.Expr.IntLit 10)))]),
+              (Ast.Stmt.Block
+                 [(Ast.Stmt.Assign ((Ast.Expr.Ident "i"), (Ast.Expr.IntLit 2)))])
+              ));
+           (Ast.Stmt.If (
+              (Ast.Expr.Binop ((Ast.Expr.Ident "i"), Ast.Op.Greater,
+                 (Ast.Expr.IntLit 5))),
+              (Ast.Stmt.Block
+                 [(Ast.Stmt.Assign ((Ast.Expr.Ident "i"), (Ast.Expr.IntLit 5)))]),
+              (Ast.Stmt.Block [])));
+           (Ast.Stmt.Return (Ast.Expr.Ident "i"))]
          }
         ]
       }
@@ -350,18 +266,17 @@ let%expect_test "iteration 8 (no argument function calls)" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "add"; params = []; locals = [];
-         body = [(Ast.Return (Ast.IntLit 5))] };
-        { Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-          locals =
-          [{ Ast.bind_type = Ast.TyInt; bind_name = "a";
-             initial_value = (Some (Ast.IntLit 2)) };
-            { Ast.bind_type = Ast.TyInt; bind_name = "b";
-              initial_value = (Some (Ast.IntLit 3)) }
-            ];
-          body = [(Ast.Return (Ast.Call { Ast.callee = "add"; args = [] }))] }
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "add"; params = [];
+         body = [(Ast.Stmt.Return (Ast.Expr.IntLit 5))] };
+        { Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
+          body =
+          [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "a" },
+              (Ast.Expr.IntLit 2)));
+            (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "b" },
+               (Ast.Expr.IntLit 3)));
+            (Ast.Stmt.Return (Ast.Expr.Call ("add", [])))]
+          }
         ]
       }
   |}]
@@ -383,36 +298,84 @@ let%expect_test "iteration 8 (function call with argument)" =
   let s = Minicc.Ast.Program.show program in
   printf "%s" s;
   [%expect {|
-    { Ast.var_decls = [];
-      func_decls =
-      [{ Ast.ret_typ = Ast.TyInt; name = "add";
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "add";
          params =
-         [{ Ast.bind_type = Ast.TyInt; bind_name = "x"; initial_value = None };
-           { Ast.bind_type = Ast.TyInt; bind_name = "y"; initial_value = None }];
-         locals = [];
+         [{ Ast.Bind.typ = Ast.Typ.TyInt; name = "x" };
+           { Ast.Bind.typ = Ast.Typ.TyInt; name = "y" }];
          body =
-         [(Ast.Return
-             (Ast.Binop
-                { Ast.binop_type = Ast.Add;
-                  binop_left = (Ast.Ident { Ast.literal = "x" });
-                  binop_right = (Ast.Ident { Ast.literal = "y" }) }))
+         [(Ast.Stmt.Return
+             (Ast.Expr.Binop ((Ast.Expr.Ident "x"), Ast.Op.Add,
+                (Ast.Expr.Ident "y"))))
            ]
          };
-        { Ast.ret_typ = Ast.TyInt; name = "main"; params = [];
-          locals =
-          [{ Ast.bind_type = Ast.TyInt; bind_name = "a";
-             initial_value = (Some (Ast.IntLit 3)) };
-            { Ast.bind_type = Ast.TyInt; bind_name = "b";
-              initial_value = (Some (Ast.IntLit 3)) }
-            ];
+        { Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
           body =
-          [(Ast.Return
-              (Ast.Call
-                 { Ast.callee = "add";
-                   args =
-                   [(Ast.Ident { Ast.literal = "a" });
-                     (Ast.Ident { Ast.literal = "b" })]
-                   }))
+          [(Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "a" },
+              (Ast.Expr.IntLit 3)));
+            (Ast.Stmt.VarDecl ({ Ast.Bind.typ = Ast.Typ.TyInt; name = "b" },
+               (Ast.Expr.IntLit 3)));
+            (Ast.Stmt.Return
+               (Ast.Expr.Call ("add",
+                  [(Ast.Expr.Ident "a"); (Ast.Expr.Ident "b")])))
+            ]
+          }
+        ]
+      }
+  |}]
+
+let%expect_test "factorial" =
+  let program = Helper.parse {|
+    int main()
+    {
+      return factorial(5);
+    }
+
+    int factorial(int n)
+    {
+      int ret;
+      if (n == 0)
+      {
+        ret = 1;
+      }
+      else
+      {
+        ret = n * factorial(n - 1);
+      }
+      return ret;
+    }
+  |} in
+  let s = Minicc.Ast.Program.show program in
+  printf "%s" s;
+  [%expect {|
+    { Ast.Program.func_decls =
+      [{ Ast.Func.typ = Ast.Typ.TyInt; name = "factorial";
+         params = [{ Ast.Bind.typ = Ast.Typ.TyInt; name = "n" }];
+         body =
+         [(Ast.Stmt.Bind { Ast.Bind.typ = Ast.Typ.TyInt; name = "ret" });
+           (Ast.Stmt.If (
+              (Ast.Expr.Binop ((Ast.Expr.Ident "n"), Ast.Op.Eq,
+                 (Ast.Expr.IntLit 0))),
+              (Ast.Stmt.Block
+                 [(Ast.Stmt.Assign ((Ast.Expr.Ident "ret"), (Ast.Expr.IntLit 1)))
+                   ]),
+              (Ast.Stmt.Block
+                 [(Ast.Stmt.Assign ((Ast.Expr.Ident "ret"),
+                     (Ast.Expr.Binop ((Ast.Expr.Ident "n"), Ast.Op.Mul,
+                        (Ast.Expr.Call ("factorial",
+                           [(Ast.Expr.Binop ((Ast.Expr.Ident "n"), Ast.Op.Sub,
+                               (Ast.Expr.IntLit 1)))
+                             ]
+                           ))
+                        ))
+                     ))
+                   ])
+              ));
+           (Ast.Stmt.Return (Ast.Expr.Ident "ret"))]
+         };
+        { Ast.Func.typ = Ast.Typ.TyInt; name = "main"; params = [];
+          body =
+          [(Ast.Stmt.Return (Ast.Expr.Call ("factorial", [(Ast.Expr.IntLit 5)])))
             ]
           }
         ]

@@ -44,6 +44,7 @@ module Stmt = struct
     | Block of t list
     | For of t * Expr.t * t * t
     | Bind of Bind.t
+    | VarDecl of Bind.t * Expr.t
   [@@deriving show]
 end
 

@@ -68,6 +68,7 @@ expr_stmt:
   | RETURN; e = expr;  { Stmt.Return e }
   | b = bind; { Stmt.Bind b }
   | e1 = expr; ASSIGN; e2 = expr; { Stmt.Assign (e1, e2) }
+  | b = bind; ASSIGN; e2 = expr; { Stmt.VarDecl (b, e2) }
 
 stmt:
   | es = expr_stmt SEMICOLON;  { es }

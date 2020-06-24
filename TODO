@@ -72,6 +72,6 @@ Iteration 9:
 
 Iteration 10:
   *Allow direct variable declarations without a prebinding.*
-  ☐ Add varaible declarations to the parser.
-  ☐ Add varaible declarations to the typchecker (desugar?).
-  ☐ Add varaible declarations to the code generator.
+  ✔ Add varaible declarations to the parser. @done(20-06-23 13:25)
+  ✔ Add varaible declarations to the typchecker (desugar?). @done(20-06-23 13:25)
+  ✔ Add varaible declarations to the code generator. @done(20-06-23 13:25)

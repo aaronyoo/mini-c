@@ -107,6 +107,7 @@ let rec check_stmt (func: Func.t) (stmt: Stmt.t) (env: env): env * TStmt.t =
     in
     env, TStmt.TBlock tstmts
   | For (init, cond, inc, body) ->
+    let saved_env = env in
     let env, tinit = check_stmt func init env in
     let tcond = check_expr cond env in
     if not (phys_equal tcond.typ TyBool)
@@ -114,10 +115,17 @@ let rec check_stmt (func: Func.t) (stmt: Stmt.t) (env: env): env * TStmt.t =
       raise (Error ("Expected boolean condition but got: " ^ (Typ.show tcond.typ)));
     let env, tinc = check_stmt func inc env in
     let env, tbody = check_stmt func body env in
-    env, TStmt.TFor (tinit, tcond, tinc, tbody)
+    ignore(env);
+    saved_env, TStmt.TFor (tinit, tcond, tinc, tbody)
   | Bind bind ->
     let env, tbind = check_bind bind env in
     env, TStmt.TBind tbind
+  | VarDecl (bind, expr) ->
+    (* Check the expression first to make sure the new binding doesn't bleed
+       into our scope. *)
+    let aexpr = check_expr expr env in
+    let env, tbind = check_bind bind env in
+    env, TStmt.TVarDecl (tbind, aexpr)
 
 let check_func (func: Func.t) (env: env) =
   (* Add the name to the function map. *)

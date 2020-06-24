@@ -1,22 +1,18 @@
 int main()
 {
-  int a;
-  a = 15;
-  int b;
-  b = 3;
-  return add(a, b);
+  return factorial(5);
 }
 
-int add(int x, int y)
+int factorial(int n)
 {
-  int r;
-  int i;
-  r = 0;
-  for (i = 0; i < 10; i = i + 1)
+  int ret;
+  if (n == 0)
   {
-    int z;
-    z = 1;
-    r = r + x + y;
+    ret = 1;
   }
-  return r;
+  else
+  {
+    ret = n * factorial(n - 1);
+  }
+  return ret;
 }

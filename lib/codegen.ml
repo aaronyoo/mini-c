@@ -1,4 +1,5 @@
 open Llvm
+open Llvm_scalar_opts
 open Base
 open Ast
 open Tast
@@ -195,7 +196,7 @@ let gen_proto (tfunc: TFunc.t) =
   let ft = function_type ret_typ param_typ in
   ignore(declare_function tfunc.name ft the_module)
 
-let gen_func_decl (tfunc: TFunc.t) (env: env) =
+let gen_func_decl (tfunc: TFunc.t) (env: env) the_fpm =
   (* Get the function from the module table. It should already exist. *)
   let the_function = match lookup_function tfunc.name the_module with
     | Some f -> f
@@ -233,9 +234,17 @@ let gen_func_decl (tfunc: TFunc.t) (env: env) =
   ignore(List.fold tfunc.body ~init:env ~f:(fun env tstmt -> fst (gen_stmt tstmt env)));
   (* Llvm.dump_module the_module; *)
   Llvm_analysis.assert_valid_function the_function;
+  (* ignore (the_fpm); *)
+  ignore (PassManager.run_function the_function the_fpm);
+
   the_function
 
 let gen_program (tprog: TProgram.t) =
+  let the_fpm = PassManager.create_function the_module in
+  add_memory_to_register_promotion the_fpm;
+  (* add_cfg_simplification the_fpm; *)
+  ignore (PassManager.initialize the_fpm);
+
   (* The environment to each function should be empty. *)
   let env = empty_env in
   (* In order to remove the need for forward declarations, we can automatically
@@ -243,4 +252,4 @@ let gen_program (tprog: TProgram.t) =
      to be looked up later in something like a call instruction. *)
   List.iter tprog.func_decls ~f: (fun tfunc -> gen_proto tfunc);
   (* Create all the function declarations. *)
-  List.iter tprog.func_decls ~f: (fun tfunc -> ignore(gen_func_decl tfunc env))
+  List.iter tprog.func_decls ~f: (fun tfunc -> ignore(gen_func_decl tfunc env the_fpm));

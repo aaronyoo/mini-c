@@ -1,6 +1,6 @@
 (library
  (name minicc)
- (libraries core llvm llvm.analysis)
+ (libraries core llvm llvm.analysis llvm.scalar_opts)
  (inline_tests)
  (preprocess
   (pps ppx_deriving.show ppx_expect)))

@@ -1,18 +1,16 @@
 int main()
 {
-  return factorial(5);
+  return fib(0);
 }
 
-int factorial(int n)
+int fib(int n)
 {
-  int ret;
   if (n == 0)
   {
-    ret = 1;
+    return 3;
   }
   else
   {
-    ret = n * factorial(n - 1);
+    return 4;
   }
-  return ret;
 }

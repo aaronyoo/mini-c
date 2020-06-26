@@ -90,9 +90,11 @@ let rec gen_expr (expr: AExpr.t) (env: env) =
     in
     build_call callee (Array.of_list evaluated_args) "" builder
 
-and gen_stmt (stmt: TStmt.t) (env: env): env * llvalue =
+and gen_stmt (stmt: TStmt.t) (env: env): env =
   match stmt with
-  | TReturn expr -> env, build_ret (gen_expr expr env) builder
+  | TReturn expr ->
+    ignore(build_ret (gen_expr expr env) builder);
+    env
   | TAssign (lhs, rhs) ->
     let lval = match lhs.expr with
       | TLval lval -> lval
@@ -100,7 +102,8 @@ and gen_stmt (stmt: TStmt.t) (env: env): env * llvalue =
     in
     let _, left_ptr = gen_lval lval env in
     let right = gen_expr rhs env in
-    env, build_store right left_ptr builder
+    ignore(build_store right left_ptr builder);
+    env
   | TIf (cond, t, f) ->
     let start_bb = insertion_block builder in
     let the_function = block_parent start_bb in
@@ -116,31 +119,25 @@ and gen_stmt (stmt: TStmt.t) (env: env): env * llvalue =
 
     (* Emit then block. *)
     position_at_end then_bb builder;
-    let then_val = gen_stmt t env in
+    ignore(gen_stmt t env);
     ignore(build_br end_bb builder);
 
     (* Emit else block. *)
     position_at_end else_bb builder;
-    let else_val = gen_stmt f env in
+    ignore(gen_stmt f env);
     ignore(build_br end_bb builder);
 
     position_at_end end_bb builder;
 
-    ignore(then_val);
     (* Ignore the environment changes in the branches. *)
-    env, snd (else_val)
+    env
   | TBlock body ->
-    let env, gen_body = List.fold_map body ~init: env ~f: (fun env tstmt -> gen_stmt tstmt env) in
-    (* Get the llvalue for the last statement generated. *)
-    let value = match List.hd (List.rev gen_body) with
-      | Some e -> e
-      | None -> raise (Error "Illegal empty block")
-    in
-    env, value
+    let env = List.fold body ~init: env ~f: (fun env tstmt -> gen_stmt tstmt env) in
+    env
   | TFor (init, cond, inc, body) ->
     (* Emit the initialization into the current basic block. Since the
        initialization block is only run once. *)
-    let env, _  = gen_stmt init env in
+    let env = gen_stmt init env in
 
     (* Create all the needed basic blocks. *)
     let start_bb = insertion_block builder in
@@ -168,16 +165,19 @@ and gen_stmt (stmt: TStmt.t) (env: env): env * llvalue =
 
     position_at_end end_bb builder;
 
-    env, cond_val
+    env
   | TBind tbind ->
     (* Add a new name to the environment. *)
     let var = build_alloca (trans_asttyp tbind.typ) tbind.name builder in
     let vars = Map.set env.var_names ~key:tbind.name ~data:var in
-    { var_names = vars; }, var
+    { var_names = vars; }
   | TVarDecl (tbind, rhs) ->
-    let right = gen_expr rhs env in
-    let env, left_ptr = gen_stmt (TBind tbind) env in
-    env, build_store right left_ptr builder
+    (* This is essentially a combination of a bind and a store. So we can build
+       both and call gen_expr and gen_stmt on them. *)
+    let env = gen_stmt (TStmt.TBind tbind) env in
+    let typed_left = ({ typ = tbind.typ; expr = (TExpr.TLval (TLval.TIdent tbind.name)) }: AExpr.t) in
+    ignore(gen_stmt (TStmt.TAssign(typed_left, rhs)) env);
+    env
 
 (** Generates an Array of parameter types. *)
 let gen_param_types (params: TBind.t list) =
@@ -231,7 +231,7 @@ let gen_func_decl (tfunc: TFunc.t) (env: env) the_fpm =
   in
 
   (* Generate the body of the function. *)
-  ignore(List.fold tfunc.body ~init:env ~f:(fun env tstmt -> fst (gen_stmt tstmt env)));
+  ignore(List.fold tfunc.body ~init:env ~f:(fun env tstmt -> gen_stmt tstmt env));
   (* Llvm.dump_module the_module; *)
   Llvm_analysis.assert_valid_function the_function;
   (* ignore (the_fpm); *)

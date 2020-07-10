@@ -1,20 +1,9 @@
 module Typ = struct
-  type t = TyInt
-         | TyBool
-  [@@deriving show]
+  type t = TyInt | TyBool [@@deriving show]
 end
 
 module Op = struct
-  type t = Add
-         | Sub
-         | Mul
-         | Div
-         | Eq
-         | Neq
-         | Less
-         | Greater
-         | Leq
-         | Geq
+  type t = Add | Sub | Mul | Div | Eq | Neq | Less | Greater | Leq | Geq
   [@@deriving show]
 end
 
@@ -29,11 +18,7 @@ module Expr = struct
 end
 
 module Bind = struct
-  type t = {
-    typ: Typ.t;
-    name: string;
-  }
-  [@@deriving show]
+  type t = { typ : Typ.t; name : string } [@@deriving show]
 end
 
 module Stmt = struct
@@ -50,15 +35,14 @@ end
 
 module Func = struct
   type t = {
-    typ: Typ.t;
-    name: string;
-    params: Bind.t list;
-    body: Stmt.t list;
-  } [@@deriving show]
+    typ : Typ.t;
+    name : string;
+    params : Bind.t list;
+    body : Stmt.t list;
+  }
+  [@@deriving show]
 end
 
 module Program = struct
-  type t = {
-    func_decls: Func.t list;
-  } [@@deriving show]
+  type t = { func_decls : Func.t list } [@@deriving show]
 end
